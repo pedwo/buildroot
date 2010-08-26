@@ -1,0 +1,22 @@
+--- ./arch/sh/boards/mach-ecovec24/setup.c.old	2010-02-15 09:43:02.000000000 +0000
++++ ./arch/sh/boards/mach-ecovec24/setup.c	2010-02-15 09:44:10.000000000 +0000
+@@ -818,6 +818,8 @@ static void __init sh_eth_init(struct sh
+ 
+ #define PORT_HIZA 0xA4050158
+ #define IODRIVEA  0xA405018A
++#define FRQCRA    0xA4150000
++#define FRQCRB    0xA4150004
+ 
+ extern char ecovec24_sdram_enter_start;
+ extern char ecovec24_sdram_enter_end;
+@@ -828,6 +830,10 @@ static int __init arch_setup(void)
+ {
+ 	struct clk *clk;
+ 
++	/* set vpu clock (166MHz) */
++	__raw_writel(0x00000030, FRQCRB);
++	__raw_writel(__raw_readl(FRQCRA) | 0x80000000, FRQCRA);
++
+ 	/* register board specific self-refresh code */
+ 	sh_mobile_register_self_refresh(SUSP_SH_STANDBY | SUSP_SH_SF,
+ 					&ecovec24_sdram_enter_start,

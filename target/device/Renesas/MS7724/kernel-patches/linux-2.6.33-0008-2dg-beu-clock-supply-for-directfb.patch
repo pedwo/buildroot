@@ -1,0 +1,81 @@
+*** ./arch/sh/boards/mach-ecovec24/setup_org.c	2010-02-17 18:46:25.000000000 +0000
+--- ./arch/sh/boards/mach-ecovec24/setup.c	2010-02-18 15:23:38.000000000 +0000
+***************
+*** 749,754 ****
+--- 749,795 ----
+  	},
+  };
+  
++ /* for DirectFB */
++ /* 2DG */
++ static struct resource twodg_resources[] = {
++ 	[0] = {
++ 		.name   = "2DG",
++ 		.start  = 0xa4680000,
++ 		.end    = 0xa46800ff,
++ 		.flags  = IORESOURCE_MEM,
++ 	},
++ 	[1] = {
++ 		.start  = 44,
++ 		.flags  = IORESOURCE_IRQ,
++ 	},
++ };
++ 
++ static struct platform_device twodg_device = {
++ 	.name           = "2dg",
++ 	.num_resources  = ARRAY_SIZE(twodg_resources),
++ 	.resource       = twodg_resources,
++ };
++ 
++ /* BEU */
++ static struct resource beu0_resources[] = {
++ 	[0] = {
++ 		.name   = "BEU0",
++ 		.start  = 0xfe930000,
++ 		.end    = 0xfe9333ff,
++ 		.flags  = IORESOURCE_MEM,
++ 	},
++ 	[1] = {
++ 		.start  = 53,
++ 		.flags  = IORESOURCE_IRQ,
++ 	},
++ };
++ 
++ static struct platform_device beu0_device = {
++ 	.name           = "beu0",
++ 	.num_resources  = ARRAY_SIZE(beu0_resources),
++ 	.resource       = beu0_resources,
++ };
++ 
+  static struct platform_device *ecovec_devices[] __initdata = {
+  	&heartbeat_device,
+  	&nor_flash_device,
+***************
+*** 769,774 ****
+--- 810,817 ----
+  	&camera_devices[1],
+  	&camera_devices[2],
+  	&fsi_device,
++ 	&beu0_device,
++ 	&twodg_device,
+  };
+  
+  #define EEPROM_ADDR 0x50
+***************
+*** 1135,1140 ****
+--- 1178,1192 ----
+  	gpio_direction_output(GPIO_PTU0, 0);
+  	mdelay(20);
+  
++ 	/* enable 2dg and beu */
++ 	clk = clk_get(NULL, "2dg0");
++ 	clk_enable(clk);
++ 	clk_put(clk);
++ 
++ 	clk = clk_get(NULL, "beu0");
++ 	clk_enable(clk);
++ 	clk_put(clk);
++ 
+  	/* enable I2C device */
+  	i2c_register_board_info(0, i2c0_devices,
+  				ARRAY_SIZE(i2c0_devices));
