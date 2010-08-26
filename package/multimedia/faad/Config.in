@@ -1,0 +1,5 @@
+config BR2_PACKAGE_FAAD
+	bool "faad"
+	help
+	  FAAD2 is an open source MPEG-4 and MPEG-2 AAC decoder.
+

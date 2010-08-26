@@ -368,4 +368,18 @@ else
 GST_PLUGINS_BAD_CONF_OPT += --disable-vcd
 endif
 
+ifeq ($(BR2_PACKAGE_GST_PLUGINS_BAD_PLUGIN_FAAD),y)
+GST_PLUGINS_BAD_CONF_OPT += --enable-faad
+GST_PLUGINS_BAD_DEPENDENCIES += faad
+else
+GST_PLUGINS_BAD_CONF_OPT += --disable-faad
+endif
+
+ifeq ($(BR2_PACKAGE_GST_PLUGINS_BAD_PLUGIN_FAAC),y)
+GST_PLUGINS_BAD_CONF_OPT += --enable-faac
+GST_PLUGINS_BAD_DEPENDENCIES += faac
+else
+GST_PLUGINS_BAD_CONF_OPT += --disable-faac
+endif
+
 $(eval $(call AUTOTARGETS,package/multimedia,gst-plugins-bad))
