@@ -12,6 +12,16 @@ DIRECTFB_LIBTOOL_PATCH = NO
 DIRECTFB_INSTALL_STAGING = YES
 DIRECTFB_INSTALL_TARGET = YES
 
+# Renesas Start
+DIRECTFB_DIR:=$(BUILD_DIR)/directfb-$(DIRECTFB_VERSION)
+
+# Fix SH detection for CodeSourcery toolchain
+define DIRECTFB_SH_TOOLCHAIN
+	$(SED) 's/sh4-\* | sh3-\*)/sh4-\* | sh3-\* | sh-\*)/' $(DIRECTFB_DIR)/configure.in
+endef
+DIRECTFB_POST_EXTRACT_HOOKS += DIRECTFB_SH_TOOLCHAIN
+# Renesas End
+
 ifeq ($(BR2_PACKAGE_DIRECTFB_MULTI),y)
 DIRECTFB_MULTI:=--enable-multi --enable-fusion
 DIRECTFB_FUSION:=linux-fusion
@@ -65,6 +75,9 @@ DIRECTFB_GFX+= unichrome
 endif
 ifeq ($(BR2_PACKAGE_DIRECTFB_I830),y)
 DIRECTFB_GFX+= i830
+endif
+ifeq ($(BR2_PACKAGE_DIRECTFB_SH772X),y)
+DIRECTFB_GFX+= sh772x
 endif
 ifeq ($(DIRECTFB_GFX),)
 DIRECTFB_GFX:=none
