@@ -1,0 +1,8 @@
+config BR2_PACKAGE_SHBEU
+	bool "shbeu"
+	select BR2_PACKAGE_UIOMUX
+	help
+	  libshbeu: A library for controlling the SH-Mobile BEU.
+
+	  http://github.com/pedwo/libshbeu/
+

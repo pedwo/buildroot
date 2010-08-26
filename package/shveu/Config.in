@@ -1,0 +1,8 @@
+config BR2_PACKAGE_SHVEU
+	bool "shveu"
+	select BR2_PACKAGE_UIOMUX
+	help
+	  libshveu: A library for controlling the SH-Mobile VEU.
+
+	  http://github.com/pedwo/libshveu/
+

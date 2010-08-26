@@ -1,0 +1,8 @@
+config BR2_PACKAGE_SHJPEG
+	bool "shjpeg"
+	select BR2_PACKAGE_UIOMUX
+	help
+	  libshjpeg: A library for controlling the SH-Mobile JPEG Processing Unit (JPU).
+
+	  http://github.com/pedwo/libshjpeg/
+
