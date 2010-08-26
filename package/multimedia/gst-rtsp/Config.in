@@ -1,0 +1,9 @@
+config BR2_PACKAGE_GST_RTSP
+	bool "gst-rtsp"
+	depends on BR2_PACKAGE_GSTREAMER
+	select BR2_PACKAGE_GST_PLUGINS_BASE
+	help
+	  A GStreamer based RTSP server.
+
+	  http://gstreamer.freedesktop.org/modules/gst-rtsp-server.html
+

@@ -1,0 +1,11 @@
+config BR2_PACKAGE_GST_FFMPEG
+	bool "gst-ffmpeg"
+	depends on BR2_PACKAGE_GSTREAMER
+	select BR2_PACKAGE_GST_PLUGINS_BASE
+	help
+	  GStreamer FFmpeg plug-in contains one plugin with a set of elements
+	  using the FFmpeg library code. It contains most popular decoders as
+	  well as very fast colorspace conversion elements.
+
+	  http://gstreamer.freedesktop.org/
+
