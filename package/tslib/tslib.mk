@@ -3,7 +3,7 @@
 # tslib
 #
 #############################################################
-TSLIB_VERSION:=1.0
+TSLIB_VERSION:=r77
 TSLIB_SOURCE:=tslib-$(TSLIB_VERSION).tar.bz2
 TSLIB_SITE:=http://download.berlios.de/tslib
 TSLIB_AUTORECONF = YES
