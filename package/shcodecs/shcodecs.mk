@@ -14,9 +14,10 @@ SHCODECS_INSTALL_TARGET = YES
 SHCODECS_DEPENDENCIES = host-pkg-config shveu shbeu uiomux
 
 define SHCODECS_INSTALL_MIDDLEWARE
-	tar jxf $(TOPDIR)/../../shcodecs/libshvpu44a.tar.bz2 -C $(TOPDIR)/../../shcodecs
-	cp -dpf $(TOPDIR)/../../shcodecs/*.so* $(STAGING_DIR)/usr/lib
-	cp -dpf $(TOPDIR)/../../shcodecs/*.so* $(TARGET_DIR)/usr/lib
+	mkdir -p $(BUILD_DIR)/middleware
+	tar jxf $(DL_DIR)/libshvpu44a.tar.bz2 -C $(BUILD_DIR)/middleware
+	install $(BUILD_DIR)/middleware/*.so* $(STAGING_DIR)/usr/lib
+	install $(BUILD_DIR)/middleware/*.so* $(TARGET_DIR)/usr/lib
 endef
 
 SHCODECS_POST_EXTRACT_HOOKS += SHCODECS_INSTALL_MIDDLEWARE
