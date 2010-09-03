@@ -3,9 +3,9 @@
 # gst-sh-mobile
 #
 #############################################################
-GST_SH_MOBILE_VERSION = 2010-07-19
-GST_SH_MOBILE_SOURCE = gst-sh-mobile-$(GST_SH_MOBILE_VERSION).tar.bz2
-GST_SH_MOBILE_SITE =
+GST_SH_MOBILE_VERSION = 0.10.1
+GST_SH_MOBILE_SOURCE = gst-sh-mobile-$(GST_SH_MOBILE_VERSION).tar.gz
+GST_SH_MOBILE_SITE = http://github.com/downloads/pedwo/gst-sh-mobile
 
 GST_SH_MOBILE_AUTORECONF = YES
 GST_SH_MOBILE_INSTALL_STAGING = YES
