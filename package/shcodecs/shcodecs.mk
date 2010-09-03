@@ -3,9 +3,9 @@
 # shcodecs
 #
 #############################################################
-SHCODECS_VERSION = latest
+SHCODECS_VERSION = 1.3.0
 SHCODECS_SOURCE = libshcodecs-$(SHCODECS_VERSION).tar.gz
-SHCODECS_SITE = 
+SHCODECS_SITE = http://github.com/downloads/pedwo/libshcodecs
 
 SHCODECS_AUTORECONF = YES
 SHCODECS_INSTALL_STAGING = YES
