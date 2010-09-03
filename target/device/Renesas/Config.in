@@ -1,0 +1,22 @@
+menuconfig BR2_TARGET_RENESAS
+	bool "Renesas Device Support"
+	depends on BR2_sh
+
+if BR2_TARGET_RENESAS
+
+config BR2_TARGET_MS7724
+	bool "MS7724"
+	depends on BR2_sh4
+	help
+	 MS7724 (Ecovec) Development board
+
+config BR2_BOARD_NAME
+	string
+	default "MS7724"		if BR2_TARGET_MS7724
+
+config BR2_BOARD_PATH
+	string "Board Path"
+	default "target/device/Renesas/$(BR2_BOARD_NAME)"
+
+endif
+

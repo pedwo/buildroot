@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -u
+
+# This script tries to mount (or unmount) a block device to a given
+# mount point (given in common.sh). For example /dev/sda is mounted to
+# /mnt/sda.
+
+DEV=/dev/$MDEV
+MOUNTPOINT=/mnt/$MDEV
+FSTYPE=auto   # 'auto' or a specific filesystem
+
+# Set MNT_ERR=/dev/null to disable the error message logging
+MNT_ERR=/tmp/mnt_err.$MDEV
+
+if ! mountpoint -q $MOUNTPOINT; then
+    # Make the mount point in case it doesn't exist
+    mkdir -p $MOUNTPOINT
+
+    case "$0" in
+        *-add) mount -t$FSTYPE $DEV $MOUNTPOINT 2>$MNT_ERR ;;
+        *-remove) mount $MOUNTPOINT 2>$MNT_ERR ;;
+    esac
+fi
+
+if [ -s $MNT_ERR ]; then
+    E="`cat $MNT_ERR`"
+    logger "$0: $E"
+fi
+
+# remove the mount point directory if mount failed and the
+# directory is empty
+if ! mountpoint -q $MOUNTPOINT; then
+    rmdir $MOUNTPOINT
+fi
+

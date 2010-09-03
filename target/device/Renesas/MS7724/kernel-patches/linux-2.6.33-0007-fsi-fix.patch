@@ -1,0 +1,42 @@
+--- a/sound/soc/sh/fsi.c
++++ b/sound/soc/sh/fsi.c
+@@ -560,6 +560,9 @@ static int fsi_dai_startup(struct snd_pc
+ 
+ 	pm_runtime_get_sync(dai->dev);
+ 
++	__raw_writel(0x00000000, 0xFE2FFD00); //DSPRST0
++	__raw_writel(0x00000000, 0xFE2FFD01); //DSPRST1
++
+ 	/* CKG1 */
+ 	data = is_play ? (1 << 0) : (1 << 4);
+ 	is_master = fsi_is_master_mode(fsi, is_play);
+--- a/arch/sh/boards/mach-ecovec24/setup.c
++++ b/arch/sh/boards/mach-ecovec24/setup.c
+@@ -818,6 +818,11 @@ static void __init sh_eth_init(struct sh
+ #define IODRIVEA  0xA405018A
+ #define FRQCRA    0xA4150000
+ #define FRQCRB    0xA4150004
++#define PRLCKCR   0xff800018
++#define PRPRICR2  0xff800038
++#define PRPRICR3  0xff800040
++#define PRPRICR10 0xff800078
++#define SPUCLKCR  0xA415003C
+ 
+ extern char ecovec24_sdram_enter_start;
+ extern char ecovec24_sdram_enter_end;
+@@ -828,6 +833,15 @@ static int __init arch_setup(void)
+ {
+ 	struct clk *clk;
+ 
++	/* setup the GPR priority */
++	__raw_writel(0x000007F0, PRLCKCR); //no Lock transfers for CPU or DMAC
++	__raw_writel(0x0000002D, PRPRICR2); //DMAC0
++	__raw_writel(0x0000002D, PRPRICR3); //DMAC1
++	__raw_writel(0x0000002D, PRPRICR10); //ETHER
++
++	/* set spu clock, used to clock core of FSI */
++	__raw_writel(0x00000003, SPUCLKCR);
++
+ 	/* set vpu clock (166MHz) */
+ 	__raw_writel(0x00000030, FRQCRB);
+ 	__raw_writel(__raw_readl(FRQCRA) | 0x80000000, FRQCRA);

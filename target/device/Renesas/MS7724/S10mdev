@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# Start mdev
+# 
+
+mount -ttmpfs mdev /dev
+mkdir /dev/shm
+chmod 01777 /dev/shm
+mkdir /dev/pts
+mount -tdevpts pts /dev/pts
+
+echo /sbin/mdev > /proc/sys/kernel/hotplug
+/sbin/mdev -s

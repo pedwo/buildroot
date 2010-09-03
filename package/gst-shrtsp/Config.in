@@ -1,0 +1,9 @@
+config BR2_PACKAGE_GST_SHRTSP
+	bool "gst-shrtsp"
+	select BR2_PACKAGE_GST_RTSP
+	select BR2_PACKAGE_GST_SH_MOBILE
+	help
+	  Renesas SH GStreamer Real Time Streaming Protocol (RTSP) server.
+
+	  http://github.com/pedwo/gst-shrtsp/
+

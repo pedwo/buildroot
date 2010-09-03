@@ -1,0 +1,7 @@
+config BR2_PACKAGE_DIRECTFB_SH772X_GFX
+	bool "SH772x Graphics kernel module for DirectFB"
+	select BR2_PACKAGE_DIRECTFB
+	help
+	  SH772x (SH-Mobile R series) Graphics kernel module for DirectFB.
+	  This allows DirectFB to use the Blend Engine Unit hardware to
+	  perform blending, and the 2DG hardware for graphics.

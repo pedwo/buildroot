@@ -1,0 +1,10 @@
+config BR2_PACKAGE_SHCODECS
+	bool "shcodecs"
+	select BR2_PACKAGE_UIOMUX
+	select BR2_PACKAGE_SHVEU
+	select BR2_PACKAGE_SHBEU
+	help
+	  libshcodecs: A library for controlling SH-Mobile hardware codecs.
+
+	  http://github.com/pedwo/libshcodecs/
+

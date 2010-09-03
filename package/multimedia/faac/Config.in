@@ -1,0 +1,4 @@
+config BR2_PACKAGE_FAAC
+	bool "faac"
+	help
+	  FAAC is an MPEG-4 and MPEG-2 AAC encoder.

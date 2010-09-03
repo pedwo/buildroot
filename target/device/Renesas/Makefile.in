@@ -1,0 +1,4 @@
+ifeq ($(BR2_TARGET_RENESAS),y)
+include target/device/Renesas/*/Makefile.in
+endif
+

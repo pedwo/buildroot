@@ -86,6 +86,7 @@ menu "Graphic libraries and applications (graphic/text)"
 
 comment "graphic libraries"
 source "package/directfb/Config.in"
+source "package/directfb-sh772x-gfx/Config.in"
 source "package/directfb-examples/Config.in"
 source "package/divine/Config.in"
 source "package/fbdump/Config.in"
@@ -446,6 +447,16 @@ source "package/ipkg/Config.in"
 if BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
 source "package/rpm/Config.in"
 endif
+endmenu
+
+menu "Renesas SH specific libraries"
+source "package/uiomux/Config.in"
+source "package/shveu/Config.in"
+source "package/shbeu/Config.in"
+source "package/shcodecs/Config.in"
+source "package/shjpeg/Config.in"
+source "package/gst-sh-mobile/Config.in"
+source "package/gst-shrtsp/Config.in"
 endmenu
 
 menu "Shell and utilities"

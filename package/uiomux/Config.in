@@ -1,0 +1,7 @@
+config BR2_PACKAGE_UIOMUX
+	bool "uiomux"
+	help
+	  UIOMux is a conflict manager for system resources, including UIO devices.
+
+	  http://github.com/pedwo/libuiomux/
+
