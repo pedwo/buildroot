@@ -5,5 +5,5 @@ config BR2_PACKAGE_GST_SHRTSP
 	help
 	  Renesas SH GStreamer Real Time Streaming Protocol (RTSP) server.
 
-	  http://github.com/kfish/gst-shrtsp/
+	  http://github.com/pedwo/gst-shrtsp/
 
