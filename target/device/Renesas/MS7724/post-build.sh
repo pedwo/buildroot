@@ -1,13 +1,14 @@
 #!/bin/bash
 #
 echo "Renesas MS7724 development board: Post-build script"
+# Target directory passed in
 
 INSTALL=`which install`
 if [ -z "$INSTALL" ]; then
 	INSTALL=`type -p install`
 fi
 
-ETC_DIR="output/target/etc"
+ETC_DIR="$1/etc"
 SRC_DIR="target/device/Renesas/MS7724"
 
 
@@ -28,6 +29,6 @@ ln -sf automount automount-remove
 popd
 
 echo "  --> Copy u-boot image to target"
-cp -f output/build/u-boot-*/u-boot.bin output/target/boot
+cp -f $1/../build/u-boot-*/u-boot.bin $1/boot
 
 
