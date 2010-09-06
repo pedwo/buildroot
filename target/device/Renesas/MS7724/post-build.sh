@@ -28,7 +28,8 @@ ln -sf automount automount-add
 ln -sf automount automount-remove
 popd
 
-echo "  --> Copy u-boot image to target"
-cp -f $1/../build/u-boot-*/u-boot.bin $1/boot
+# TODO this script is now called *before* u-boot has been built
+#echo "  --> Copy u-boot image to target"
+#cp -f $1/../build/u-boot-*/u-boot.bin $1/boot
 
 

@@ -10,10 +10,7 @@ DIRECTFB_SH772X_GFX_AUTORECONF = NO
 DIRECTFB_SH772X_GFX_INSTALL_STAGING = YES
 DIRECTFB_SH772X_GFX_INSTALL_TARGET = YES
 
-# BR2_LINUX26_VERSION is not really dependable
-# LINUX26_VERSION is not yet set.
-# Retrieve REAL kernel version from file.
-LINUX_FOR_DFB=`cat $(BUILD_DIR)/.linux-version`
+LINUX_FOR_DFB=$(BR2_LINUX_KERNEL_VERSION)
 
 # We are operating in a specific dir of the DirectFB src
 DIRECTFB_DIR:=$(BUILD_DIR)/directfb-$(DIRECTFB_VERSION)
