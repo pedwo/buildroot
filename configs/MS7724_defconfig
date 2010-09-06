@@ -547,16 +547,6 @@ BR2_PACKAGE_ZLIB=y
 # BR2_PACKAGE_IPKG is not set
 
 #
-# Renesas SH specific libraries
-#
-# BR2_PACKAGE_UIOMUX is not set
-# BR2_PACKAGE_SHVEU is not set
-# BR2_PACKAGE_SHBEU is not set
-# BR2_PACKAGE_SHCODECS is not set
-# BR2_PACKAGE_SHJPEG is not set
-# BR2_PACKAGE_GST_SHRTSP is not set
-
-#
 # Shell and utilities
 #
 # BR2_PACKAGE_AT is not set
@@ -582,8 +572,8 @@ BR2_PACKAGE_ZLIB=y
 #
 # Target filesystem options
 #
-BR2_ROOTFS_POST_BUILD_SCRIPT="target/device/Renesas/$(BR2_BOARD_NAME)/post-build.sh"
-BR2_ROOTFS_DEVICE_TABLE="target/device/Renesas/$(BR2_BOARD_NAME)/device_table.txt"
+BR2_ROOTFS_POST_BUILD_SCRIPT=""
+BR2_ROOTFS_DEVICE_TABLE="target/device/Renesas/device_table.txt"
 BR2_ROOTFS_SKELETON_DEFAULT=y
 # BR2_ROOTFS_SKELETON_CUSTOM is not set
 # BR2_TARGET_ROOTFS_CRAMFS is not set

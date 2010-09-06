@@ -928,8 +928,8 @@ BR2_PACKAGE_GST_SHRTSP=y
 #
 # Target filesystem options
 #
-BR2_ROOTFS_POST_BUILD_SCRIPT="target/device/Renesas/$(BR2_BOARD_NAME)/post-build.sh"
-BR2_ROOTFS_DEVICE_TABLE="target/device/Renesas/$(BR2_BOARD_NAME)/device_table.txt"
+BR2_ROOTFS_POST_BUILD_SCRIPT=""
+BR2_ROOTFS_DEVICE_TABLE="target/device/Renesas/device_table.txt"
 BR2_ROOTFS_SKELETON_DEFAULT=y
 # BR2_ROOTFS_SKELETON_CUSTOM is not set
 # BR2_TARGET_ROOTFS_CRAMFS is not set

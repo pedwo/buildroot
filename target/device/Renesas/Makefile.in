@@ -1,4 +1,4 @@
 ifeq ($(BR2_TARGET_RENESAS),y)
-include target/device/Renesas/*/Makefile.in
+TARGET_SKELETON_PATCH:=target/device/Renesas
 endif
 
