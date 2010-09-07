@@ -10,9 +10,16 @@ config BR2_TARGET_MS7724
 	help
 	 MS7724 (Ecovec) Development board
 
+config BR2_TARGET_AP325RXA
+	bool "AP325RXA"
+	depends on BR2_sh4
+	help
+	 Algo AP325RXA board
+
 config BR2_BOARD_NAME
 	string
 	default "MS7724"		if BR2_TARGET_MS7724
+	default "AP325RXA"		if BR2_TARGET_AP325RXA
 
 config BR2_BOARD_PATH
 	string "Board Path"
