@@ -3,9 +3,10 @@
 # tslib
 #
 #############################################################
-TSLIB_VERSION:=r77
-TSLIB_SOURCE:=tslib-$(TSLIB_VERSION).tar.bz2
-TSLIB_SITE:=http://download.berlios.de/tslib
+TSLIB_VERSION = d9ff92d4
+TSLIB_SOURCE = tslib-$(TSLIB_VERSION).tar.gz
+TSLIB_SITE = http://github.com/downloads/pedwo/tslib
+
 TSLIB_AUTORECONF = YES
 TSLIB_LIBTOOL_PATCH = NO
 TSLIB_INSTALL_STAGING = YES
