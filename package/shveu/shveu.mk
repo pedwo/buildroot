@@ -11,6 +11,6 @@ SHVEU_AUTORECONF = YES
 SHVEU_INSTALL_STAGING = YES
 SHVEU_INSTALL_TARGET = YES
 
-SHVEU_DEPENDENCIES = host-pkg-config uiomux
+SHVEU_DEPENDENCIES = host-pkg-config uiomux ncurses
 
 $(eval $(call AUTOTARGETS,package,shveu))

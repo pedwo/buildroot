@@ -11,6 +11,6 @@ SHBEU_AUTORECONF = YES
 SHBEU_INSTALL_STAGING = YES
 SHBEU_INSTALL_TARGET = YES
 
-SHBEU_DEPENDENCIES = host-pkg-config uiomux
+SHBEU_DEPENDENCIES = host-pkg-config uiomux ncurses
 
 $(eval $(call AUTOTARGETS,package,shbeu))
