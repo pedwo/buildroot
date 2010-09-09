@@ -18,7 +18,9 @@ BINUTILS_TARGET_PREREQ:=
 
 BINUTILS_HOST_PREREQ:=$(TOOLCHAIN_DIR)/gmp/lib/libgmp$(HOST_LIBEXT) \
 	$(TOOLCHAIN_DIR)/mpfr/lib/libmpfr$(HOST_LIBEXT)
+ifneq ($(BR2_BINUTILS_VERSION),)
 HOST_SOURCE += host-libgmp-source host-libmpfr-source
+endif
 
 BINUTILS_TARGET_PREREQ:=$(TARGET_DIR)/usr/lib/libgmp$(LIBTGTEXT) \
 	$(TARGET_DIR)/usr/lib/libmpfr$(LIBTGTEXT)

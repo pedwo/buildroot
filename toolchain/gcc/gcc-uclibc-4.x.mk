@@ -99,7 +99,9 @@ endif
 
 GCC_WITH_HOST_GMP=--with-gmp=$(GMP_HOST_DIR)
 GCC_WITH_HOST_MPFR=--with-mpfr=$(MPFR_HOST_DIR)
+ifneq ($(BR2_GCC_VERSION),)
 HOST_SOURCE += host-libgmp-source host-libmpfr-source
+endif
 
 ifeq ($(BR2_INSTALL_FORTRAN),y)
 GCC_TARGET_LANGUAGES:=$(GCC_TARGET_LANGUAGES),fortran
@@ -132,7 +134,9 @@ GCC_CONF_ENV:=acx_cv_prog_cc_pedantic__Wno_long_long__Wno_variadic_macros_______
 	acx_cv_prog_cc_warning__Wno_overlength_strings=no
 endif
 
+ifneq ($(BR2_GCC_VERSION),)
 HOST_SOURCE+=gcc-source
+endif
 
 $(DL_DIR)/$(GCC_SOURCE):
 	mkdir -p $(DL_DIR)
