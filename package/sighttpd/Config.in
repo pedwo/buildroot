@@ -1,0 +1,11 @@
+config BR2_PACKAGE_SIGHTTPD
+	bool "sighttpd"
+	help
+	  Sighttpd is an HTTP streaming server designed for distributing
+	  realtime input. It is particularly useful for making camera streams
+	  available to multiple clients, and has been designed for embedded
+	  systems use.
+
+	  http://www.kfish.org/software/sighttpd
+	  http://github.com/kfish/sighttpd
+

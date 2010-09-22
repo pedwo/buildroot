@@ -455,6 +455,7 @@ source "package/shveu/Config.in"
 source "package/shbeu/Config.in"
 source "package/shcodecs/Config.in"
 source "package/shjpeg/Config.in"
+source "package/sighttpd/Config.in"
 source "package/gst-sh-mobile/Config.in"
 source "package/gst-shrtsp/Config.in"
 endmenu
