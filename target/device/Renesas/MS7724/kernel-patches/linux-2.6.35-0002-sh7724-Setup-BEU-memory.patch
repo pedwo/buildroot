@@ -1,0 +1,25 @@
+From 3bfa08e7ebd2127d645963f49ce97c3622b1e0bb Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Wed, 29 Sep 2010 11:16:39 +0100
+Subject: [PATCH 2/6] sh7724: Setup BEU memory
+
+---
+ arch/sh/kernel/cpu/sh4a/setup-sh7724.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/arch/sh/kernel/cpu/sh4a/setup-sh7724.c b/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
+index 828c965..a3fbe8d 100644
+--- a/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
++++ b/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
+@@ -933,6 +933,8 @@ static int __init sh7724_devices_setup(void)
+ 	platform_resource_setup_memory(&vpu_device, "vpu", 2 << 20);
+ 	platform_resource_setup_memory(&veu0_device, "veu0", 2 << 20);
+ 	platform_resource_setup_memory(&veu1_device, "veu1", 2 << 20);
++	platform_resource_setup_memory(&beu0_device, "beu0", 0 << 20);
++	platform_resource_setup_memory(&beu1_device, "beu1", 0 << 20);
+ 	platform_resource_setup_memory(&jpu_device,  "jpu",  2 << 20);
+ 	platform_resource_setup_memory(&spu0_device, "spu0", 2 << 20);
+ 	platform_resource_setup_memory(&spu1_device, "spu1", 2 << 20);
+-- 
+1.7.1
+

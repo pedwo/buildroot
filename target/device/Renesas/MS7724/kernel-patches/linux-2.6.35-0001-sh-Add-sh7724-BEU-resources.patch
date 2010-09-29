@@ -1,6 +1,19 @@
---- a/arch/sh/kernel/cpu/sh4a/setup-sh7724.c.old
+From 9191bd9f1d64b4f0243aeeffdccdbdb105c9bc54 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <Phil.Edworthy@renesas.com>
+Date: Wed, 28 Jul 2010 13:08:19 +0000
+Subject: [PATCH 1/6] sh: Add sh7724 BEU resources
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+Signed-off-by: Paul Mundt <lethal@linux-sh.org>
+---
+ arch/sh/kernel/cpu/sh4a/setup-sh7724.c |   66 ++++++++++++++++++++++++++++++++
+ 1 files changed, 66 insertions(+), 0 deletions(-)
+
+diff --git a/arch/sh/kernel/cpu/sh4a/setup-sh7724.c b/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
+index 79c556e..828c965 100644
+--- a/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
 +++ b/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
-@@ -317,6 +317,70 @@ static struct platform_device veu1_device = {
+@@ -524,6 +524,70 @@ static struct platform_device veu1_device = {
  	},
  };
  
@@ -69,9 +82,9 @@
 +};
 +
  static struct sh_timer_config cmt_platform_data = {
- 	.name = "CMT",
  	.channel_offset = 0x60,
-@@ -670,6 +734,8 @@ static struct platform_device *sh7724_devices[] __initdata = {
+ 	.timer_bit = 5,
+@@ -857,6 +921,8 @@ static struct platform_device *sh7724_devices[] __initdata = {
  	&vpu_device,
  	&veu0_device,
  	&veu1_device,
@@ -80,12 +93,6 @@
  	&jpu_device,
  	&spu0_device,
  	&spu1_device,
-@@ -680,6 +746,8 @@ static int __init sh7724_devices_setup(void)
- 	platform_resource_setup_memory(&vpu_device, "vpu", 2 << 20);
- 	platform_resource_setup_memory(&veu0_device, "veu0", 2 << 20);
- 	platform_resource_setup_memory(&veu1_device, "veu1", 2 << 20);
-+	platform_resource_setup_memory(&beu0_device, "beu0",  2 << 20);
-+	platform_resource_setup_memory(&beu1_device, "beu1",  2 << 20);
- 	platform_resource_setup_memory(&jpu_device,  "jpu",  2 << 20);
- 	platform_resource_setup_memory(&spu0_device, "spu0", 2 << 20);
- 	platform_resource_setup_memory(&spu1_device, "spu1", 2 << 20);
+-- 
+1.7.1
+

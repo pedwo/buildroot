@@ -1,0 +1,27 @@
+From 19270fbfc64db97794b2b5ac909f65a68166cc2a Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Wed, 29 Sep 2010 13:29:27 +0100
+Subject: [PATCH 6/6] mt9t112: Add start up delay
+
+Without this delay, the mt9t112 sensor works but will often capture
+frames with the chroma data set to 0.
+---
+ drivers/media/video/mt9t112.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/media/video/mt9t112.c b/drivers/media/video/mt9t112.c
+index 0ca281a..730fdcd 100644
+--- a/drivers/media/video/mt9t112.c
++++ b/drivers/media/video/mt9t112.c
+@@ -907,6 +907,8 @@ static int mt9t112_s_stream(struct v4l2_subdev *sd, int enable)
+ 
+ 	CLOCK_INFO(client, EXT_CLOCK);
+ 
++	mdelay(300);
++
+ 	return ret;
+ }
+ 
+-- 
+1.7.1
+

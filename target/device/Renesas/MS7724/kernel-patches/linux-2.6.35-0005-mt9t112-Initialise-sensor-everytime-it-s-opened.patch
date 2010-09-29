@@ -1,0 +1,71 @@
+From daf962067d00b52bb516c4e51d922eeb7ea3e016 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Wed, 29 Sep 2010 11:48:53 +0100
+Subject: [PATCH 5/6] mt9t112: Initialise sensor everytime it's opened
+
+---
+ drivers/media/video/mt9t112.c |   30 ++++++++++++------------------
+ 1 files changed, 12 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/media/video/mt9t112.c b/drivers/media/video/mt9t112.c
+index d826d63..0ca281a 100644
+--- a/drivers/media/video/mt9t112.c
++++ b/drivers/media/video/mt9t112.c
+@@ -106,9 +106,6 @@ struct mt9t112_priv {
+ 	struct mt9t112_frame_size	 frame;
+ 	const struct mt9t112_format	*format;
+ 	int				 model;
+-	u32				 flags;
+-/* for flags */
+-#define INIT_DONE  (1<<0)
+ };
+ 
+ /************************************************************************
+@@ -861,6 +858,7 @@ static int mt9t112_s_stream(struct v4l2_subdev *sd, int enable)
+ 	struct i2c_client *client = sd->priv;
+ 	struct mt9t112_priv *priv = to_mt9t112(client);
+ 	int ret = 0;
++	u16 param;
+ 
+ 	if (!enable) {
+ 		/* FIXME
+@@ -876,25 +874,21 @@ static int mt9t112_s_stream(struct v4l2_subdev *sd, int enable)
+ 		return ret;
+ 	}
+ 
+-	if (!(priv->flags & INIT_DONE)) {
+-		u16 param = (MT9T112_FLAG_PCLK_RISING_EDGE &
+-			     priv->info->flags) ? 0x0001 : 0x0000;
++	param = (MT9T112_FLAG_PCLK_RISING_EDGE &
++		     priv->info->flags) ? 0x0001 : 0x0000;
+ 
+-		ECHECKER(ret, mt9t112_init_camera(client));
++	ECHECKER(ret, mt9t112_init_camera(client));
+ 
+-		/* for 30Hz */
+-		mt9t112_mcu_write(ret, client, VAR(18, 12), 0x0024);
+-		mt9t112_mcu_write(ret, client, VAR(26, 21), 0x0006);
+-		mt9t112_mcu_write(ret, client, VAR(26, 23), 0x0007);
+-		mt9t112_mcu_write(ret, client, VAR(26, 45), 0x0000);
+-
+-		/* Invert PCLK (Data sampled on falling edge of pixclk) */
+-		mt9t112_reg_write(ret, client, 0x3C20, param);
++	/* for 30Hz */
++	mt9t112_mcu_write(ret, client, VAR(18, 12), 0x0024);
++	mt9t112_mcu_write(ret, client, VAR(26, 21), 0x0006);
++	mt9t112_mcu_write(ret, client, VAR(26, 23), 0x0007);
++	mt9t112_mcu_write(ret, client, VAR(26, 45), 0x0000);
+ 
+-		mdelay(5);
++	/* Invert PCLK (Data sampled on falling edge of pixclk) */
++	mt9t112_reg_write(ret, client, 0x3C20, param);
+ 
+-		priv->flags |= INIT_DONE;
+-	}
++	mdelay(5);
+ 
+ 	mt9t112_mcu_write(ret, client, VAR(26, 7), priv->format->fmt);
+ 	mt9t112_mcu_write(ret, client, VAR(26, 9), priv->format->order);
+-- 
+1.7.1
+

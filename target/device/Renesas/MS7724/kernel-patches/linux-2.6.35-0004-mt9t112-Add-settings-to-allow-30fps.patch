@@ -1,0 +1,29 @@
+From 12268171c24a60a66b0115359fa8f5f382e44f27 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Tue, 28 Sep 2010 15:56:19 +0100
+Subject: [PATCH 4/6] mt9t112: Add settings to allow 30fps
+
+---
+ drivers/media/video/mt9t112.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/media/video/mt9t112.c b/drivers/media/video/mt9t112.c
+index e4bf1db..d826d63 100644
+--- a/drivers/media/video/mt9t112.c
++++ b/drivers/media/video/mt9t112.c
+@@ -882,6 +882,12 @@ static int mt9t112_s_stream(struct v4l2_subdev *sd, int enable)
+ 
+ 		ECHECKER(ret, mt9t112_init_camera(client));
+ 
++		/* for 30Hz */
++		mt9t112_mcu_write(ret, client, VAR(18, 12), 0x0024);
++		mt9t112_mcu_write(ret, client, VAR(26, 21), 0x0006);
++		mt9t112_mcu_write(ret, client, VAR(26, 23), 0x0007);
++		mt9t112_mcu_write(ret, client, VAR(26, 45), 0x0000);
++
+ 		/* Invert PCLK (Data sampled on falling edge of pixclk) */
+ 		mt9t112_reg_write(ret, client, 0x3C20, param);
+ 
+-- 
+1.7.1
+

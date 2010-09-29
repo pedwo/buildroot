@@ -1,0 +1,68 @@
+From 62850476b33b35f76f0cfa2b80be8bb709c9beca Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Wed, 29 Sep 2010 13:47:35 +0100
+Subject: [PATCH 3/6] ms7724: 2DG/BEU resources for DirectFB
+
+---
+ arch/sh/boards/mach-ecovec24/setup.c |   31 +++++++++++++++++++++++++++++++
+ 1 files changed, 31 insertions(+), 0 deletions(-)
+
+diff --git a/arch/sh/boards/mach-ecovec24/setup.c b/arch/sh/boards/mach-ecovec24/setup.c
+index 1d7b495..305c9f0 100644
+--- a/arch/sh/boards/mach-ecovec24/setup.c
++++ b/arch/sh/boards/mach-ecovec24/setup.c
+@@ -756,6 +756,26 @@ static struct platform_device fsi_device = {
+ 	},
+ };
+ 
++/* 2DG */
++static struct resource twodg_resources[] = {
++	[0] = {
++		.name   = "2DG",
++		.start  = 0xa4680000,
++		.end    = 0xa46800ff,
++		.flags  = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start  = 44,
++		.flags  = IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device twodg_device = {
++	.name           = "2dg",
++	.num_resources  = ARRAY_SIZE(twodg_resources),
++	.resource       = twodg_resources,
++};
++
+ /* IrDA */
+ static struct resource irda_resources[] = {
+ 	[0] = {
+@@ -895,6 +915,7 @@ static struct platform_device *ecovec_devices[] __initdata = {
+ 	&camera_devices[1],
+ 	&camera_devices[2],
+ 	&fsi_device,
++	&twodg_device,
+ 	&irda_device,
+ 	&vou_device,
+ #if defined(CONFIG_MMC_SH_MMCIF)
+@@ -1303,6 +1324,16 @@ static int __init arch_setup(void)
+ 	__raw_writew((__raw_readw(IODRIVEA) & ~0x3000) | 0x2000 , IODRIVEA);
+ #endif
+ 
++	/* enable 2dg */
++	clk = clk_get(NULL, "2dg0");
++	clk_enable(clk);
++	clk_put(clk);
++
++	/* enable beu */
++	clk = clk_get(NULL, "beu0");
++	clk_enable(clk);
++	clk_put(clk);
++
+ 	/* enable I2C device */
+ 	i2c_register_board_info(0, i2c0_devices,
+ 				ARRAY_SIZE(i2c0_devices));
+-- 
+1.7.1
+
