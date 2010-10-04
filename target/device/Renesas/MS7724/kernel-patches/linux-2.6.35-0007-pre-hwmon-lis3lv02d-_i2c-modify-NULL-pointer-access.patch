@@ -1,0 +1,62 @@
+From b6e15b0a7693c88a6cf22eef20230978a0e13a08 Mon Sep 17 00:00:00 2001
+From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+Date: Fri, 27 Aug 2010 19:06:09 +0900
+Subject: [PATCH] pre: hwmon: lis3lv02d: modify NULL pointer access
+
+If CONFIG_PM was selected and lis3lv02d_platform_data was NULL,
+the kernel will be panic when halt command run
+
+Reported-by: Yusuke Goda <yusuke.goda.sx@renesas.com>
+Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+---
+ drivers/hwmon/lis3lv02d_i2c.c |    4 ++--
+ drivers/hwmon/lis3lv02d_spi.c |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/hwmon/lis3lv02d_i2c.c b/drivers/hwmon/lis3lv02d_i2c.c
+index dc1f540..8e5933b 100644
+--- a/drivers/hwmon/lis3lv02d_i2c.c
++++ b/drivers/hwmon/lis3lv02d_i2c.c
+@@ -121,7 +121,7 @@ static int lis3lv02d_i2c_suspend(struct i2c_client *client, pm_message_t mesg)
+ {
+ 	struct lis3lv02d *lis3 = i2c_get_clientdata(client);
+ 
+-	if (!lis3->pdata->wakeup_flags)
++	if (!lis3->pdata || !lis3->pdata->wakeup_flags)
+ 		lis3lv02d_poweroff(lis3);
+ 	return 0;
+ }
+@@ -130,7 +130,7 @@ static int lis3lv02d_i2c_resume(struct i2c_client *client)
+ {
+ 	struct lis3lv02d *lis3 = i2c_get_clientdata(client);
+ 
+-	if (!lis3->pdata->wakeup_flags)
++	if (!lis3->pdata || !lis3->pdata->wakeup_flags)
+ 		lis3lv02d_poweron(lis3);
+ 	return 0;
+ }
+diff --git a/drivers/hwmon/lis3lv02d_spi.c b/drivers/hwmon/lis3lv02d_spi.c
+index 82b1680..b9be5e3 100644
+--- a/drivers/hwmon/lis3lv02d_spi.c
++++ b/drivers/hwmon/lis3lv02d_spi.c
+@@ -92,7 +92,7 @@ static int lis3lv02d_spi_suspend(struct spi_device *spi, pm_message_t mesg)
+ {
+ 	struct lis3lv02d *lis3 = spi_get_drvdata(spi);
+ 
+-	if (!lis3->pdata->wakeup_flags)
++	if (!lis3->pdata || !lis3->pdata->wakeup_flags)
+ 		lis3lv02d_poweroff(&lis3_dev);
+ 
+ 	return 0;
+@@ -102,7 +102,7 @@ static int lis3lv02d_spi_resume(struct spi_device *spi)
+ {
+ 	struct lis3lv02d *lis3 = spi_get_drvdata(spi);
+ 
+-	if (!lis3->pdata->wakeup_flags)
++	if (!lis3->pdata || !lis3->pdata->wakeup_flags)
+ 		lis3lv02d_poweron(lis3);
+ 
+ 	return 0;
+-- 
+1.7.0.4
+
