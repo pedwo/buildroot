@@ -3,7 +3,7 @@
 # uiomux
 #
 #############################################################
-UIOMUX_VERSION = 1.4.0
+UIOMUX_VERSION = 1.5.0
 UIOMUX_SOURCE = libuiomux-$(UIOMUX_VERSION).tar.gz
 UIOMUX_SITE = http://github.com/downloads/pedwo/libuiomux
 
