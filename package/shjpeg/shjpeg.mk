@@ -3,9 +3,9 @@
 # shjpeg
 #
 #############################################################
-SHJPEG_VERSION = 1.2.0
+SHJPEG_VERSION = 1.3.1
 SHJPEG_SOURCE = libshjpeg-$(SHJPEG_VERSION).tar.gz
-SHJPEG_SITE = 
+SHJPEG_SITE = http://github.com/downloads/pedwo/libshjpeg
 
 SHJPEG_AUTORECONF = YES
 SHJPEG_INSTALL_STAGING = YES
