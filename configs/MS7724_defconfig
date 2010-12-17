@@ -92,7 +92,7 @@ BR2_TARGET_GENERIC_GETTY_BAUDRATE="115200"
 #
 # Commands
 #
-BR2_WGET="wget --passive-ftp -nd"
+BR2_WGET="wget --passive-ftp --no-check-certificate -nd"
 BR2_SVN_CO="svn co"
 BR2_SVN_UP="svn up"
 BR2_BZR_CO="bzr co"
