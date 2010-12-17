@@ -3,7 +3,7 @@
 # directfb_sh772x_gfx
 #
 #############################################################
-DIRECTFB_VERSION:=1.4.3
+DIRECTFB_VERSION:=1.4.10
 DIRECTFB_SITE:=http://www.directfb.org/downloads/Core/DirectFB-$(DIRECTFB_VERSION_MAJOR)
 DIRECTFB_SOURCE:=DirectFB-$(DIRECTFB_VERSION).tar.gz
 DIRECTFB_SH772X_GFX_AUTORECONF = NO
