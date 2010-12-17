@@ -11,7 +11,6 @@ XSERVER_XORG_SERVER_MAKE = $(MAKE1) # make install fails with parallel make
 XSERVER_XORG_SERVER_AUTORECONF = NO
 XSERVER_XORG_SERVER_LIBTOOL_PATCH = NO
 XSERVER_XORG_SERVER_INSTALL_STAGING = YES
-XSERVER_XORG_SERVER_USE_CONFIG_CACHE = NO # overrides CFLAGS
 XSERVER_XORG_SERVER_INSTALL_STAGING_OPT = DESTDIR=$(STAGING_DIR) install install-data
 
 XSERVER_XORG_SERVER_DEPENDENCIES = 	\
@@ -65,7 +64,7 @@ XSERVER_XORG_SERVER_CONF_OPT = --disable-config-hal \
 		--with-fontdir=/usr/share/fonts/X11/
 
 ifeq ($(BR2_PACKAGE_XSERVER_xorg),y)
-XSERVER_XORG_SERVER_CONF_OPT += --enable-xorg --disable-glx
+XSERVER_XORG_SERVER_CONF_OPT += --enable-xorg
 XSERVER_XORG_SERVER_DEPENDENCIES += xlib_libpciaccess libdrm
 else
 XSERVER_XORG_SERVER_CONF_OPT += --disable-xorg
@@ -74,6 +73,10 @@ endif
 ifeq ($(BR2_PACKAGE_XSERVER_tinyx),y)
 XSERVER_XORG_SERVER_CONF_OPT += --enable-kdrive --enable-xfbdev \
 		--disable-glx --disable-dri --disable-xsdl
+define XSERVER_CREATE_X_SYMLINK
+ ln -f -s Xfbdev $(TARGET_DIR)/usr/bin/X
+endef
+XSERVER_XORG_SERVER_POST_INSTALL_TARGET_HOOKS += XSERVER_CREATE_X_SYMLINK
 else
 XSERVER_XORG_SERVER_CONF_OPT += --disable-kdrive --disable-xfbdev
 endif
@@ -144,5 +147,10 @@ ifneq ($(BR2_PACKAGE_XLIB_LIBDMX),y)
 XSERVER_XORG_SERVER_CONF_OPT += --disable-dmx
 endif
 
+ifeq ($(BR2_PACKAGE_MESA3D),y)
+XSERVER_XORG_SERVER_CONF_OPT += --enable-glx
+else
+XSERVER_XORG_SERVER_CONF_OPT += --disable-glx
+endif
 
 $(eval $(call AUTOTARGETS,package/x11r7,xserver_xorg-server))

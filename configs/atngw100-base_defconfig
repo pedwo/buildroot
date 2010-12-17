@@ -84,9 +84,8 @@ BR2_TARGET_AVR32_ATNGW100_BASE=y
 # Build options
 #
 BR2_WGET="wget --passive-ftp --retry-connrefused --waitretry=10"
-BR2_SVN_CO="svn co"
-BR2_SVN_UP="svn up"
-BR2_GIT="git clone"
+BR2_SVN="svn"
+BR2_GIT="git"
 BR2_ZCAT="zcat"
 BR2_BZCAT="bzcat"
 BR2_TAR_OPTIONS=""
@@ -113,7 +112,6 @@ BR2_TOPDIR_PREFIX=""
 BR2_TOPDIR_SUFFIX=""
 BR2_JLEVEL=2
 # BR2_DEPRECATED is not set
-# BR2_CONFIG_CACHE is not set
 # BR2_ENABLE_DEBUG is not set
 BR2_STRIP_strip=y
 # BR2_STRIP_sstrip is not set
@@ -486,7 +484,6 @@ BR2_PACKAGE_MTD_NANDWRITE=y
 BR2_PACKAGE_MTD_SUMTOOL=y
 # BR2_PACKAGE_NTFS_3G is not set
 # BR2_PACKAGE_PCIUTILS is not set
-# BR2_PACKAGE_PCMCIA is not set
 # BR2_PACKAGE_SETSERIAL is not set
 # BR2_PACKAGE_SMARTMONTOOLS is not set
 # BR2_PACKAGE_USBMOUNT is not set
@@ -587,7 +584,6 @@ BR2_PACKAGE_XSERVER_none=y
 # BR2_PACKAGE_PANGO is not set
 # BR2_PACKAGE_LIBDRM is not set
 # BR2_PACKAGE_LIBERATION is not set
-# BR2_PACKAGE_LIBGLIB12 is not set
 # BR2_PACKAGE_LIBGLIB2 is not set
 # BR2_PACKAGE_OPENMOTIF is not set
 # BR2_PACKAGE_FONTCONFIG is not set

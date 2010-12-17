@@ -3,7 +3,7 @@
 # alsa-lib
 #
 #############################################################
-ALSA_LIB_VERSION = 1.0.22
+ALSA_LIB_VERSION = 1.0.23
 ALSA_LIB_SOURCE = alsa-lib-$(ALSA_LIB_VERSION).tar.bz2
 ALSA_LIB_SITE = ftp://ftp.alsa-project.org/pub/lib
 ALSA_LIB_INSTALL_STAGING = YES
@@ -44,8 +44,6 @@ ALSA_LIB_CONF_OPT += --disable-old-symbols
 endif
 
 ifeq ($(BR2_ENABLE_DEBUG),y)
-# install-exec doesn't install the config files
-ALSA_LIB_INSTALL_TARGET_OPT = DESTDIR=$(TARGET_DIR) install
 ALSA_LIB_CONF_OPT += --enable-debug
 endif
 
@@ -69,18 +67,17 @@ endif
 
 ALSA_LIB_CONF_ENV = CFLAGS="$(ALSA_LIB_CFLAGS)" \
 		    LDFLAGS="$(TARGET_LDFLAGS) -lm"
-# the above doesn't work with shared config.cache
-ALSA_LIB_USE_CONFIG_CACHE = NO
 
-$(eval $(call AUTOTARGETS,package/multimedia,alsa-lib))
-
-$(ALSA_LIB_TARGET_UNINSTALL):
+define ALSA_LIB_UNINSTALL_TARGET_CMDS
 	-rm -f $(TARGET_DIR)/usr/lib/libasound.so*
 	-rm -rf $(TARGET_DIR)/usr/lib/alsa-lib
 	-rm -rf $(TARGET_DIR)/usr/share/alsa
+endef
 
-$(ALSA_LIB_TARGET_CLEAN):
+define ALSA_LIB_UNINSTALL_STAGING_CMDS
 	-rm -f $(STAGING_DIR)/usr/lib/libasound.*
 	-rm -rf $(STAGING_DIR)/usr/lib/alsa-lib
 	-rm -rf $(STAGING_DIR)/usr/share/alsa
+endef
 
+$(eval $(call AUTOTARGETS,package/multimedia,alsa-lib))

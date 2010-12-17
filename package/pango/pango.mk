@@ -4,7 +4,7 @@
 #
 #############################################################
 PANGO_VERSION_MAJOR = 1.28
-PANGO_VERSION_MINOR = 0
+PANGO_VERSION_MINOR = 2
 PANGO_VERSION = $(PANGO_VERSION_MAJOR).$(PANGO_VERSION_MINOR)
 
 PANGO_SOURCE = pango-$(PANGO_VERSION).tar.bz2
@@ -54,8 +54,10 @@ else
         PANGO_CONF_OPT += --without-x
 endif
 
-$(eval $(call AUTOTARGETS,package,pango))
-
-$(PANGO_HOOK_POST_INSTALL):
+define PANGO_INSTALL_INITSCRIPT
 	$(INSTALL) -m 755 package/pango/S25pango $(TARGET_DIR)/etc/init.d/
-	touch $@
+endef
+
+PANGO_POST_INSTALL_TARGET_HOOKS += PANGO_INSTALL_INITSCRIPT
+
+$(eval $(call AUTOTARGETS,package,pango))

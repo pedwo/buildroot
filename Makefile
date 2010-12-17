@@ -22,15 +22,25 @@
 # Just run 'make menuconfig', configure stuff, then run 'make'.
 # You shouldn't need to mess with anything beyond this point...
 #--------------------------------------------------------------
+
+# Set and export the version string
+export BR2_VERSION:=2010.11-rc1
+
+# This top-level Makefile can *not* be executed in parallel
+.NOTPARALLEL:
+
 # absolute path
 TOPDIR:=$(shell pwd)
 CONFIG_CONFIG_IN=Config.in
-CONFIG_DEFCONFIG=.defconfig
 CONFIG=package/config
 DATE:=$(shell date +%Y%m%d)
 
-noconfig_targets:=menuconfig gconfig xconfig config oldconfig randconfig \
-	defconfig allyesconfig allnoconfig release \
+# Compute the full local version string so packages can use it as-is
+# Need to export it, so it can be got from environment in children (eg. mconf)
+export BR2_VERSION_FULL:=$(BR2_VERSION)$(shell $(TOPDIR)/scripts/setlocalversion)
+
+noconfig_targets:=menuconfig nconfig gconfig xconfig config oldconfig randconfig \
+	defconfig %_defconfig savedefconfig allyesconfig allnoconfig silentoldconfig release \
 	randpackageconfig allyespackageconfig allnopackageconfig \
 	source-check help
 
@@ -46,6 +56,7 @@ space:=$(empty) $(empty)
 ifneq ("$(origin O)", "command line")
 O:=output
 CONFIG_DIR:=$(TOPDIR)
+NEED_WRAPPER=
 else
 # other packages might also support Linux-style out of tree builds
 # with the O=<dir> syntax (E.G. Busybox does). As make automatically
@@ -61,6 +72,7 @@ override O:=$(O)
 CONFIG_DIR:=$(O)
 # we need to pass O= everywhere we call back into the toplevel makefile
 EXTRAMAKEARGS = O=$(O)
+NEED_WRAPPER=y
 endif
 
 # $(shell find . -name *_defconfig |sed 's/.*\///')
@@ -144,15 +156,6 @@ HOSTLD:=$(shell which $(HOSTLD) || type -p $(HOSTLD) || echo ld)
 HOSTLN:=$(shell which $(HOSTLN) || type -p $(HOSTLN) || echo ln)
 HOSTNM:=$(shell which $(HOSTNM) || type -p $(HOSTNM) || echo nm)
 
-ifndef CFLAGS_FOR_BUILD
-CFLAGS_FOR_BUILD:=-g -O2
-endif
-ifndef CXXFLAGS_FOR_BUILD
-CXXFLAGS_FOR_BUILD:=-g -O2
-endif
-ifndef FCFLAGS_FOR_BUILD
-FCFLAGS_FOR_BUILD:=-g -O2
-endif
 export HOSTAR HOSTAS HOSTCC HOSTCXX HOSTFC HOSTLD
 
 # bash prints the name of the directory on 'cd <dir>' if CDPATH is
@@ -231,7 +234,7 @@ PREFERRED_LIB_FLAGS:=--enable-static --enable-shared
 ##############################################################
 ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
 BASE_TARGETS:=uclibc-configured binutils cross_compiler uclibc-target-utils kernel-headers
-else ifeq ($(BR2_TOOLCHAIN_EXTERNAL),y)
+else
 BASE_TARGETS:=uclibc
 endif
 TARGETS:=
@@ -245,20 +248,17 @@ ifeq ($(ARCH),xtensa)
 ARCH:=$(ARCH)_$(call qstrip,$(BR2_xtensa_core_name))
 endif
 
-WGET:=$(call qstrip,$(BR2_WGET)) $(SPIDER) $(QUIET)
-SVN_CO:=$(call qstrip,$(BR2_SVN_CO)) $(QUIET)
-SVN_UP:=$(call qstrip,$(BR2_SVN_UP)) $(QUIET)
-BZR_CO:=$(call qstrip,$(BR2_BZR_CO)) $(QUIET)
-BZR_UP:=$(call qstrip,$(BR2_BZR_UP)) $(QUIET)
-GIT:=$(call qstrip,$(BR2_GIT)) $(QUIET)
+KERNEL_ARCH:=$(shell echo "$(ARCH)" | sed -e "s/-.*//" \
+	-e s/i.86/i386/ -e s/sun4u/sparc64/ \
+	-e s/arm.*/arm/ -e s/sa110/arm/ \
+	-e s/parisc64/parisc/ \
+	-e s/powerpc64/powerpc/ \
+	-e s/ppc.*/powerpc/ -e s/mips.*/mips/ \
+	-e s/sh.*/sh/)
+
 ZCAT:=$(call qstrip,$(BR2_ZCAT))
 BZCAT:=$(call qstrip,$(BR2_BZCAT))
 TAR_OPTIONS=$(call qstrip,$(BR2_TAR_OPTIONS)) -xf
-
-DL_DIR=$(call qstrip,$(BR2_DL_DIR))
-ifeq ($(DL_DIR),)
-DL_DIR:=$(TOPDIR)/dl
-endif
 
 GNU_TARGET_SUFFIX:=-$(call qstrip,$(BR2_GNU_TARGET_SUFFIX))
 
@@ -299,9 +299,15 @@ ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
 include toolchain/toolchain-buildroot.mk
 else ifeq ($(BR2_TOOLCHAIN_EXTERNAL),y)
 include toolchain/toolchain-external.mk
+else ifeq ($(BR2_TOOLCHAIN_CTNG),y)
+include toolchain/toolchain-crosstool-ng.mk
 endif
 
 include package/*/*.mk
+
+include boot/common.mk
+include target/Makefile.in
+include linux/linux.mk
 
 TARGETS+=target-finalize
 
@@ -309,9 +315,6 @@ ifeq ($(BR2_ENABLE_LOCALE_PURGE),y)
 TARGETS+=target-purgelocales
 endif
 
-include boot/common.mk
-include target/Makefile.in
-include linux/linux.mk
 include fs/common.mk
 
 TARGETS+=erase-fakeroots
@@ -323,20 +326,20 @@ TARGETS_ALL:=$(patsubst %,__real_tgt_%,$(TARGETS))
 # all targets depend on the crosscompiler and it's prerequisites
 $(TARGETS_ALL): __real_tgt_%: $(BASE_TARGETS) %
 
-$(BR2_DEPENDS_DIR): $(CONFIG_DIR)/.config
-#	rm -rf $@
-#	mkdir -p $(@D)
-#	cp -dpRf $(CONFIG)/buildroot-config $@
-
 dirs: $(DL_DIR) $(TOOLCHAIN_DIR) $(BUILD_DIR) $(STAGING_DIR) $(TARGET_DIR) \
 	$(HOST_DIR) $(BR2_DEPENDS_DIR) $(BINARIES_DIR) $(STAMP_DIR)
 
 $(BASE_TARGETS): dirs
 
-world: dependencies dirs $(BASE_TARGETS) $(TARGETS_ALL)
+$(BUILD_DIR)/buildroot-config/auto.conf: $(CONFIG_DIR)/.config
+	$(MAKE) $(EXTRAMAKEARGS) silentoldconfig
+
+prepare: $(BUILD_DIR)/buildroot-config/auto.conf
+
+world: prepare dependencies dirs $(BASE_TARGETS) $(TARGETS_ALL)
 
 
-.PHONY: all world dirs clean distclean source \
+.PHONY: all world dirs clean distclean source outputmakefile \
 	$(BASE_TARGETS) $(TARGETS) $(TARGETS_ALL) \
 	$(TARGETS_CLEAN) $(TARGETS_DIRCLEAN) $(TARGETS_SOURCE) \
 	$(DL_DIR) $(TOOLCHAIN_DIR) $(BUILD_DIR) $(STAGING_DIR) $(TARGET_DIR) \
@@ -411,8 +414,7 @@ endif
 	else \
 		/sbin/ldconfig -r $(TARGET_DIR); \
 	fi
-	echo $(BR2_VERSION)$(shell $(TOPDIR)/scripts/setlocalversion) > \
-		$(TARGET_DIR)/etc/br-version
+	echo $(BR2_VERSION_FULL) > $(TARGET_DIR)/etc/br-version
 
 ifneq ($(BR2_ROOTFS_POST_BUILD_SCRIPT),"")
 	$(BR2_ROOTFS_POST_BUILD_SCRIPT) $(TARGET_DIR)
@@ -438,23 +440,13 @@ endif
 source: $(TARGETS_SOURCE) $(HOST_SOURCE)
 
 _source-check:
-	$(MAKE) $(EXTRAMAKEARGS) SPIDER=--spider source
+	$(MAKE) DL_MODE=SOURCE_CHECK $(EXTRAMAKEARGS) source
 
 external-deps:
-	@$(MAKE) -Bs BR2_WGET=$(TOPDIR)/toolchain/wget-show-external-deps.sh \
-		$(EXTRAMAKEARGS) SPIDER=--spider source
+	@$(MAKE) -Bs DL_MODE=SHOW_EXTERNAL_DEPS $(EXTRAMAKEARGS) source
 
 show-targets:
 	@echo $(TARGETS)
-
-ifeq ($(BR2_CONFIG_CACHE),y)
-# drop configure caches if configuration is changed
-$(BUILD_DIR)/tgt-config.cache $(BUILD_DIR)/host-config.cache: $(CONFIG_DIR)/.config
-	rm -f $@
-	touch $@
-
-$(BASE_TARGETS): | $(BUILD_DIR)/tgt-config.cache $(BUILD_DIR)/host-config.cache
-endif
 
 else # ifeq ($(BR2_HAVE_DOT_CONFIG),y)
 
@@ -468,99 +460,98 @@ export HOSTCFLAGS
 
 $(BUILD_DIR)/buildroot-config/%onf:
 	mkdir -p $(@D)/lxdialog
-	$(MAKE) CC="$(HOSTCC)" obj=$(@D) -C $(CONFIG) $(@F)
-	-@if [ ! -f $(CONFIG_DIR)/.config ]; then \
-		cp $(CONFIG_DEFCONFIG) $(CONFIG_DIR)/.config; \
-	fi
+	$(MAKE) CC="$(HOSTCC)" obj=$(@D) -C $(CONFIG) -f Makefile.br $(@F)
 
-xconfig: $(BUILD_DIR)/buildroot-config/qconf
+COMMON_CONFIG_ENV = \
+	KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
+	KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
+	KCONFIG_TRISTATE=$(BUILD_DIR)/buildroot-config/tristate.config \
+	BUILDROOT_CONFIG=$(CONFIG_DIR)/.config
+
+xconfig: $(BUILD_DIR)/buildroot-config/qconf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@if ! KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< $(CONFIG_CONFIG_IN); then \
+	@if ! $(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN); then \
 		test -f $(CONFIG_DIR)/.config.cmd || rm -f $(CONFIG_DIR)/.config; \
 	fi
 
-gconfig: $(BUILD_DIR)/buildroot-config/gconf
+gconfig: $(BUILD_DIR)/buildroot-config/gconf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@if ! KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
-		srctree=$(TOPDIR) \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< $(CONFIG_CONFIG_IN); then \
+	@if ! $(COMMON_CONFIG_ENV) srctree=$(TOPDIR) \
+		$< $(CONFIG_CONFIG_IN); then \
 		test -f $(CONFIG_DIR)/.config.cmd || rm -f $(CONFIG_DIR)/.config; \
 	fi
 
-menuconfig: $(BUILD_DIR)/buildroot-config/mconf
+menuconfig: $(BUILD_DIR)/buildroot-config/mconf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@if ! KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< $(CONFIG_CONFIG_IN); then \
+	@if ! $(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN); then \
 		test -f $(CONFIG_DIR)/.config.cmd || rm -f $(CONFIG_DIR)/.config; \
 	fi
 
-config: $(BUILD_DIR)/buildroot-config/conf
+nconfig: $(BUILD_DIR)/buildroot-config/nconf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< $(CONFIG_CONFIG_IN)
+	@if ! $(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN); then \
+		test -f $(CONFIG_DIR)/.config.cmd || rm -f $(CONFIG_DIR)/.config; \
+	fi
 
-oldconfig: $(BUILD_DIR)/buildroot-config/conf
+config: $(BUILD_DIR)/buildroot-config/conf outputmakefile
+	@mkdir -p $(BUILD_DIR)/buildroot-config
+	@$(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN)
+
+oldconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	mkdir -p $(BUILD_DIR)/buildroot-config
-	@KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< -o $(CONFIG_CONFIG_IN)
+	@$(COMMON_CONFIG_ENV) $< --oldconfig $(CONFIG_CONFIG_IN)
 
-randconfig: $(BUILD_DIR)/buildroot-config/conf
+randconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< -r $(CONFIG_CONFIG_IN)
+	@$(COMMON_CONFIG_ENV) $< --randconfig $(CONFIG_CONFIG_IN)
 
-allyesconfig: $(BUILD_DIR)/buildroot-config/conf
-	cat $(CONFIG_DEFCONFIG) > $(CONFIG_DIR)/.config
+allyesconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< -y $(CONFIG_CONFIG_IN)
+	@$(COMMON_CONFIG_ENV) $< --allyesconfig $(CONFIG_CONFIG_IN)
 
-allnoconfig: $(BUILD_DIR)/buildroot-config/conf
+allnoconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< -n $(CONFIG_CONFIG_IN)
+	@$(COMMON_CONFIG_ENV) $< --allnoconfig $(CONFIG_CONFIG_IN)
 
-randpackageconfig: $(BUILD_DIR)/buildroot-config/conf
+randpackageconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
 	@grep -v BR2_PACKAGE_ $(CONFIG_DIR)/.config > $(CONFIG_DIR)/.config.nopkg
-	@KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
+	@$(COMMON_CONFIG_ENV) \
 		KCONFIG_ALLCONFIG=$(CONFIG_DIR)/.config.nopkg \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< -r $(CONFIG_CONFIG_IN)
+		$< --randconfig $(CONFIG_CONFIG_IN)
 	@rm -f $(CONFIG_DIR)/.config.nopkg
 
-allyespackageconfig: $(BUILD_DIR)/buildroot-config/conf
+allyespackageconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
 	@grep -v BR2_PACKAGE_ $(CONFIG_DIR)/.config > $(CONFIG_DIR)/.config.nopkg
-	@KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
+	@$(COMMON_CONFIG_ENV) \
 		KCONFIG_ALLCONFIG=$(CONFIG_DIR)/.config.nopkg \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< -y $(CONFIG_CONFIG_IN)
+		$< --allyesconfig $(CONFIG_CONFIG_IN)
 	@rm -f $(CONFIG_DIR)/.config.nopkg
 
-allnopackageconfig: $(BUILD_DIR)/buildroot-config/conf
+allnopackageconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
 	@grep -v BR2_PACKAGE_ $(CONFIG_DIR)/.config > $(CONFIG_DIR)/.config.nopkg
-	@KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
+	@$(COMMON_CONFIG_ENV) \
 		KCONFIG_ALLCONFIG=$(CONFIG_DIR)/.config.nopkg \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< -n $(CONFIG_CONFIG_IN)
+		$< --allnoconfig $(CONFIG_CONFIG_IN)
 	@rm -f $(CONFIG_DIR)/.config.nopkg
 
-defconfig: $(BUILD_DIR)/buildroot-config/conf
+silentoldconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
-		KCONFIG_AUTOHEADER=$(BUILD_DIR)/buildroot-config/autoconf.h \
-		BUILDROOT_CONFIG=$(CONFIG_DIR)/.config $< -d $(CONFIG_CONFIG_IN)
+	$(COMMON_CONFIG_ENV) $< --silentoldconfig $(CONFIG_CONFIG_IN)
+
+defconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
+	@mkdir -p $(BUILD_DIR)/buildroot-config
+	@$(COMMON_CONFIG_ENV) $< --defconfig $(CONFIG_CONFIG_IN)
+
+%_defconfig: $(BUILD_DIR)/buildroot-config/conf $(TOPDIR)/configs/%_defconfig outputmakefile
+	@mkdir -p $(BUILD_DIR)/buildroot-config
+	@$(COMMON_CONFIG_ENV) $< --defconfig=$(TOPDIR)/configs/$@ $(CONFIG_CONFIG_IN)
+
+savedefconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
+	@mkdir -p $(BUILD_DIR)/buildroot-config
+	@$(COMMON_CONFIG_ENV) $< --savedefconfig=$(TOPDIR)/defconfig $(CONFIG_CONFIG_IN)
 
 # check if download URLs are outdated
 source-check: allyesconfig
@@ -573,6 +564,15 @@ endif # ifeq ($(BR2_HAVE_DOT_CONFIG),y)
 # Cleanup and misc junk
 #
 #############################################################
+
+# outputmakefile generates a Makefile in the output directory, if using a
+# separate output directory. This allows convenient use of make in the
+# output directory.
+outputmakefile:
+ifeq ($(NEED_WRAPPER),y)
+	$(Q)$(TOPDIR)/scripts/mkmakefile $(TOPDIR) $(O)
+endif
+
 clean:
 	rm -rf $(STAGING_DIR) $(TARGET_DIR) $(BINARIES_DIR) $(HOST_DIR) \
 		$(STAMP_DIR) $(BUILD_DIR) $(TOOLCHAIN_DIR)
@@ -589,11 +589,7 @@ endif
 flush:
 	rm -f $(BUILD_DIR)/tgt-config.cache $(BUILD_DIR)/host-config.cache
 
-%_defconfig: $(TOPDIR)/configs/%_defconfig
-	cp $^ $(CONFIG_DIR)/.config
-	@$(MAKE) $(EXTRAMAKEARGS) oldconfig
-
-configured: dirs host-sed kernel-headers uclibc-config busybox-config linux26-config
+configured: dirs kernel-headers uclibc-config busybox-config linux26-config
 
 prepatch:	gcc-patched binutils-patched gdb-patched uclibc-patched
 
@@ -633,9 +629,10 @@ help:
 	@echo 'See docs/README and docs/buildroot.html for further details'
 	@echo
 
+release: OUT=buildroot-$(BR2_VERSION)
+
 release:
-	OUT=buildroot-$$(grep -A2 BR2_VERSION $(CONFIG_CONFIG_IN)|grep default|cut -f2 -d\"); \
-	git archive --format=tar --prefix=$$OUT/ master|gzip -9 >$$OUT.tar.gz
+	git archive --format=tar --prefix=$(OUT)/ master|gzip -9 >$(OUT).tar.gz
 
 .PHONY: $(noconfig_targets)
 

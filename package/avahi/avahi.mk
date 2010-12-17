@@ -64,7 +64,8 @@ AVAHI_CONF_ENV = ac_cv_func_strtod=yes \
 		ac_cv_func_working_mktime=yes \
 		jm_cv_func_working_re_compile_pattern=yes \
 		ac_use_included_regex=no \
-		avahi_cv_sys_cxx_works=yes
+		avahi_cv_sys_cxx_works=yes \
+		DATADIR=share
 
 AVAHI_CONF_OPT = --localstatedir=/var \
 		--disable-qt3 \
@@ -137,19 +138,31 @@ AVAHI_DEPENDENCIES += libintl
 AVAHI_MAKE_OPT = LIBS=-lintl
 endif
 
-$(eval $(call AUTOTARGETS,package,avahi))
-
-$(AVAHI_HOOK_POST_INSTALL):
+define AVAHI_REMOVE_INITSCRIPT
 	rm -rf $(TARGET_DIR)/etc/init.d/avahi-*
-ifeq ($(BR2_PACKAGE_AVAHI_AUTOIPD),y)
+endef
+
+AVAHI_POST_INSTALL_TARGET_HOOKS += AVAHI_REMOVE_INITSCRIPT
+
+define AVAHI_INSTALL_AUTOIPD
 	rm -rf $(TARGET_DIR)/etc/dhcp3/
 	$(INSTALL) -D -m 0755 package/avahi/busybox-udhcpc-default.script $(TARGET_DIR)/usr/share/udhcpc/default.script
 	$(INSTALL) -m 0755 package/avahi/S05avahi-setup.sh $(TARGET_DIR)/etc/init.d/
 	rm -f $(TARGET_DIR)/var/lib/avahi-autoipd
 	$(INSTALL) -d -m 0755 $(TARGET_DIR)/var/lib
 	ln -sf /tmp/avahi-autoipd $(TARGET_DIR)/var/lib/avahi-autoipd
+endef
+
+ifeq ($(BR2_PACKAGE_AVAHI_AUTOIPD),y)
+AVAHI_POST_INSTALL_TARGET_HOOKS += AVAHI_INSTALL_AUTOIPD
 endif
-ifeq ($(BR2_PACKAGE_AVAHI_DAEMON),y)
+
+define AVAHI_INSTALL_DAEMON_INITSCRIPT
 	$(INSTALL) -m 0755 package/avahi/S50avahi-daemon $(TARGET_DIR)/etc/init.d/
+endef
+
+ifeq ($(BR2_PACKAGE_AVAHI_DAEMON),y)
+AVAHI_POST_INSTALL_TARGET_HOOKS += AVAHI_INSTALL_DAEMON_INITSCRIPT
 endif
-	touch $@
+
+$(eval $(call AUTOTARGETS,package,avahi))

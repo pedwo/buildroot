@@ -9,26 +9,21 @@ DMRAID_SITE:=http://people.redhat.com/~heinzm/sw/dmraid/src
 DMRAID_SUBDIR:=$(DMRAID_VERSION)
 # lib and tools race with parallel make
 DMRAID_MAKE = $(MAKE1)
-DMRAID_DEPENDENCIES:=lvm2
-DMRAID_INSTALL_STAGING:=yes
+DMRAID_INSTALL_STAGING = YES
+DMRAID_UNINSTALL_STAGING_OPT = DESTDIR=$(STAGING_DIR) remove
+DMRAID_INSTALL_TARGET_OPT = DESTDIR=$(TARGET_DIR) install
+
+DMRAID_DEPENDENCIES = lvm2
+
+define DMRAID_INSTALL_INITSCRIPT
+	$(INSTALL) -m 0755 package/dmraid/dmraid.init $(TARGET_DIR)/etc/init.d/S20dmraid
+endef
+
+DMRAID_POST_INSTALL_TARGET_HOOKS += DMRAID_INSTALL_INITSCRIPT
+
+define DMRAID_UNINSTALL_TARGET_CMDS
+	$(MAKE) DESTDIR=$(TARGET_DIR) remove -C $(@D)/$(DMRAID_SUBDIR)
+	rm -f $(TARGET_DIR)/etc/init.d/S20dmraid
+endef
 
 $(eval $(call AUTOTARGETS,package,dmraid))
-
-$(DMRAID_TARGET_INSTALL_TARGET): $(DMRAID_TARGET_INSTALL_STAGING)
-	$(call MESSAGE,"Installing to target")
-	$(INSTALL) -m 0755 $(STAGING_DIR)/usr/sbin/dmraid $(TARGET_DIR)/usr/sbin
-	$(INSTALL) -m 0755 package/dmraid/dmraid.init $(TARGET_DIR)/etc/init.d/dmraid
-	touch $@
-
-ifeq ($(BR2_ENABLE_DEBUG),)
-$(DMRAID_HOOK_POST_INSTALL): $(DMRAID_TARGET_INSTALL_TARGET)
-	$(STRIPCMD) $(STRIP_STRIP_ALL) $(TARGET_DIR)/usr/sbin/dmraid
-	touch $@
-endif
-
-$(DMRAID_TARGET_UNINSTALL):
-	$(call MESSAGE,"Uninstalling")
-#	makefile has no uninstall target..
-#	$(MAKE) DESTDIR=$(STAGING_DIR) -C $(DMRAID_DIR) uninstall
-	rm -f $(TARGET_DIR)/usr/sbin/dmraid $(TARGET_DIR)/etc/init.d/dmraid
-	rm -f $(DMRAID_TARGET_INSTALL_TARGET) $(DMRAID_HOOK_POST_INSTALL)

@@ -1,3 +1,89 @@
+2010.11-rc1, Released November 8th, 2010:
+
+	Fixes all over the tree and new features.
+
+	Kconfig infrastructure rebased against 2.6.36-rc1, bringing
+	misc fixes + nconfig and savedefconfig targets.
+
+	Toolchain: ARM cortex A9 support, experimental crosstool-ng
+	backend, GCC 4.5.x.
+
+	Fs: Squashfs 4.1 with lzo support
+
+	Old-style package hooks (*_HOOK_POST_*) removed. Use the more
+	generic new-style ones instead.
+
+	Download handling reworked and support for git/svn downloads
+	added.
+
+	Removed experimental shared config.cache support, as it is
+	too unreliable.
+
+	A convenience Makefile wrapper is created when using
+	out-of-tree building, similar to how it is done for the kernel.
+
+	Alpha, Cris, IA64 and Sparc64 architecture support removed.
+
+	New packages: argp-standalone, gdk-pixbuf, gpsd, gst-ffmpeg,
+	libmpeg2, kbd, librsvg, nuttcp, rng-tools, rrdtool, xz
+
+	Updated/fixed packages: acpid, alsa-lib, argus, at, autoconf,
+	automake, avahi, axel, beecrypt, berkeleydb, bind, bmon, boa,
+	bootutils, bridge-utils, bsdiff, busybox, cvs, dbus, directfb,
+	dmraid, docker, dosfstools, dropbear, e2fsprogs, ethtool,
+	expat, ezxml, fbset, fconfig, ffmpeg, freetype, gadgetfs-test,
+	gamin, gawk, genext2fs, gperf, gst-plugins-base,
+	gst-plugins-ugly, gtk2-themes, gtkperf, gvfs, haserl, hdparm,
+	hostapd, hwdata, ifplugd, imagemagick, iperf, ipsec-tools,
+	iproute2, iptables, iw, jpeg, kexec, kismet, less, libcgi,
+	libcurl, libdaemon, libdnet, liberation, libevent, libeXosip2,
+	libglade, libgtk2, libiconv, libidn, libintl, libmms, libmpd,
+	libnl, liboil, libosip2, libpcap, libpng, libtool, libungif,
+	libxml2, libxslt, lighttpd, lite, lm-sensors, lockfile-progs,
+	logrotate, m4, matchbox, mdadm, mesa3d, metacity, mplayer,
+	mtd-utils, mysql_client, nano, nbd, ncftp, neon, netperf,
+	netsnmp, ng-spice-rework, ntfsprogs, ntp, openntpd, openssh,
+	openssl, openvpn, oprofile, pango, patch, pcre, php,
+	pkg-config, portmap, pppd, pptp-linux, prboom, proftpd, radvd,
+	rdesktop, readline, rp-pppoe, ruby, qt, quagga, samba, sawman,
+	sdl_mixer, sdl_sound, sed, setserial, shared-mime-info, slang,
+	speex, sqlite, squashfs, startup-notification, strace,
+	sylpheed, sysstat, taglib, tcpdump, thttpd, tiff, tn5250,
+	torsmo, tslib, udev, udpcast, usbmount, usbutils, vsftpd,
+	vtun, which, wireless-tools, wpa_supplicant, xapp_twm,
+	xapp_xbacklight, xapp_xcursorgen, xapp_xinit, xapp_xinput,
+	xapp_xmore,
+	xdriver_xf86-input-{acecad,aiptek,evdev,joystick,keyboard},
+	xdriver-xf86-input-{mouse,synaptics,vmmouse,void},
+	xdriver-xf86-video-{apm,ark,ast,ati,chips,cirrus,dummy,fbdev},
+	xdriver-xf86-video-{geode,glide,glint,i128,i740,intel,mach64},
+	xdriver-xf86-video-{mga,neomagic,newport,nv,openchrome,r128},
+	xdriver-xf86-video-{rendition,s3,s3virge,savage,siliconmotion},
+	xdriver-xf86-video-{sis,sisusb,suncg3,suncg6,suncg14,sunffb},
+	xdriver-xf86-video-{sunleo,suntcx,tdfx,tga,trident,v4l,vesa},
+	xdriver-xf86-video-{vmware,voodeo,wsfb,xgi,xgixp},
+	xkeyboard-config, xlib_libX11, xserver_xorg-server, xstroke,
+	xterm, xvkbd, zlib
+
+	Deprecated packages: hotplug, lzma, ng-spice-rework, sfdisk
+
+	Removed packages: dillo, libglib12, libgtk12, microwin,
+	pcmcia
+
+	Issues resolved (http://bugs.uclibc.org):
+
+	#901:  new package: gpsd
+	#2389: Generate a Makefile wrapper in $(O)
+	#2461: wireless_tools: install shared library if needed
+	#2521: Can't compile sdl_mixer, mikmod.h can't be found
+	#2533: xserver_xorg-server: Enable glx, if mesa3d is built
+	#2563: [PATCH] cairo: Expose the configure option to disable some...
+	#2581: libmms: Update to 0.6, and patch to work on architectures...
+	#2707: Can't compile linux kernel using buildroot + crosstool-ng
+	#2731: Build order
+	#2737: buildroot configuration tool crashing when the path exceeds...
+	#2767: Build for lsof broken in buildroot-2010.08
+
 2010.08: Released August 31th, 2010:
 
 	Fixes all over the tree.

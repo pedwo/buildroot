@@ -92,9 +92,8 @@ BR2_TARGET_ARM=y
 #
 BR2_PRIMARY_SITE=""
 BR2_WGET="wget --passive-ftp -nd"
-BR2_SVN_CO="svn co"
-BR2_SVN_UP="svn up"
-BR2_GIT="git clone"
+BR2_SVN="svn"
+BR2_GIT="git"
 BR2_ZCAT="gzip -d -c"
 BR2_BZCAT="bzcat"
 BR2_TAR_OPTIONS=""
@@ -473,7 +472,6 @@ BR2_BLOCKDEV_SUPPORT=y
 # BR2_PACKAGE_MTD is not set
 # BR2_PACKAGE_NTFS-3G is not set
 # BR2_PACKAGE_PCIUTILS is not set
-# BR2_PACKAGE_PCMCIA is not set
 # BR2_PACKAGE_RAIDTOOLS is not set
 # BR2_PACKAGE_SETSERIAL is not set
 # BR2_PACKAGE_SFDISK is not set
@@ -558,7 +556,6 @@ BR2_PACKAGE_XSERVER_none=y
 #
 # BR2_PACKAGE_PANGO is not set
 # BR2_PACKAGE_LIBDRM is not set
-# BR2_PACKAGE_LIBGLIB12 is not set
 # BR2_PACKAGE_LIBGLIB2 is not set
 # BR2_PACKAGE_LIBSEXY is not set
 

@@ -38,11 +38,15 @@ else ifeq ($(BR2_LINUX_KERNEL_BZIMAGE),y)
 LINUX26_IMAGE_NAME=bzImage
 else ifeq ($(BR2_LINUX_KERNEL_ZIMAGE),y)
 LINUX26_IMAGE_NAME=zImage
-else ifeq ($(BR2_LINUX_KERNEL_VMLINUX),y)
+else ifeq ($(BR2_LINUX_KERNEL_VMLINUX_BIN),y)
 LINUX26_IMAGE_NAME=vmlinux.bin
 endif
 
+ifeq ($(KERNEL_ARCH),avr32)
+LINUX26_IMAGE_PATH=$(LINUX26_DIR)/arch/$(KERNEL_ARCH)/boot/images/$(LINUX26_IMAGE_NAME)
+else
 LINUX26_IMAGE_PATH=$(LINUX26_DIR)/arch/$(KERNEL_ARCH)/boot/$(LINUX26_IMAGE_NAME)
+endif
 
 # Download
 $(LINUX26_DIR)/.stamp_downloaded:
@@ -104,9 +108,6 @@ ifeq ($(BR2_TARGET_ROOTFS_INITRAMFS),y)
 	$(call KCONFIG_ENABLE_OPT,CONFIG_BLK_DEV_INITRD,$(@D)/.config)
 	$(call KCONFIG_SET_OPT,CONFIG_INITRAMFS_SOURCE,\"$(BINARIES_DIR)/rootfs.initramfs\",$(@D)/.config)
 	$(call KCONFIG_ENABLE_OPT,CONFIG_INITRAMFS_COMPRESSION_GZIP,$(@D)/.config)
-else
-	$(call KCONFIG_DISABLE_OPT,CONFIG_BLK_DEV_INITRD,$(@D)/.config)
-	$(call KCONFIG_SET_OPT,CONFIG_INITRAMFS_SOURCE,\"\",$(@D)/.config)
 endif
 	$(TARGET_MAKE_ENV) $(MAKE) $(LINUX26_MAKE_FLAGS) -C $(@D) oldconfig
 	$(Q)touch $@
@@ -137,7 +138,7 @@ $(LINUX26_DIR)/.stamp_installed: $(LINUX26_DIR)/.stamp_compiled
 
 linux26: host-module-init-tools $(LINUX26_DEPENDENCIES) $(LINUX26_DIR)/.stamp_installed
 
-linux26-menuconfig linux26-xconfig linux26-gconfig: host-sed dirs $(LINUX26_DIR)/.stamp_configured
+linux26-menuconfig linux26-xconfig linux26-gconfig: dirs $(LINUX26_DIR)/.stamp_configured
 	$(MAKE) $(LINUX26_MAKE_FLAGS) -C $(LINUX26_DIR) $(subst linux26-,,$@)
 
 # Support for rebuilding the kernel after the initramfs file list has
@@ -162,6 +163,7 @@ TARGETS+=linux26
 endif
 
 # Checks to give errors that the user can understand
+ifeq ($(filter source,$(MAKECMDGOALS)),)
 ifeq ($(BR2_LINUX_KERNEL_USE_DEFCONFIG),y)
 ifeq ($(call qstrip,$(BR2_LINUX_KERNEL_DEFCONFIG)),)
 $(error No kernel defconfig name specified, check your BR2_LINUX_KERNEL_DEFCONFIG setting)
@@ -172,4 +174,6 @@ ifeq ($(BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG),y)
 ifeq ($(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE)),)
 $(error No kernel configuration file specified, check your BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE setting)
 endif
+endif
+
 endif

@@ -6,7 +6,6 @@
 NEON_VERSION:=0.28.3
 NEON_SITE:=http://www.webdav.org/neon/
 NEON_INSTALL_STAGING:=YES
-NEON_INSTALL_TARGET_OPT:=DESTDIR=$(TARGET_DIR) install
 NEON_CONF_OPT:=--enable-shared --without-gssapi --disable-rpath
 
 NEON_DEPENDENCIES:=host-pkg-config
@@ -47,10 +46,3 @@ NEON_CONF_OPT+=--without-ssl
 endif
 
 $(eval $(call AUTOTARGETS,package,neon))
-
-ifeq ($(BR2_ENABLE_DEBUG),)
-# neon doesn't have an install-strip target, so do it afterwards
-$(NEON_HOOK_POST_INSTALL): $(NEON_TARGET_INSTALL_TARGET)
-	$(STRIPCMD) $(STRIP_STRIP_UNNEEDED) $(TARGET_DIR)/usr/lib/libneon.so
-	touch $@
-endif

@@ -8,7 +8,6 @@ SQLITE_VERSION = 3.6.23.1
 SQLITE_SOURCE = sqlite-amalgamation-$(SQLITE_VERSION).tar.gz
 SQLITE_SITE = http://www.sqlite.org
 SQLITE_INSTALL_STAGING = YES
-SQLITE_INSTALL_TARGET_OPT = DESTDIR=$(TARGET_DIR) install
 SQLITE_LIBTOOL_PATCH = NO
 
 ifneq ($(BR2_LARGEFILE),y)
@@ -16,8 +15,6 @@ ifneq ($(BR2_LARGEFILE),y)
 # --disable-largefile is passed, breaking the build. Work around it by
 # simply adding it to CFLAGS for configure instead
 SQLITE_CONF_ENV = CFLAGS="$(TARGET_CFLAGS) -DSQLITE_DISABLE_LFS"
-# changing CFLAGS doesn't work with config.cache
-SQLITE_USE_CONFIG_CACHE = NO
 endif
 
 SQLITE_CONF_OPT =	--enable-shared \
@@ -35,15 +32,16 @@ else
 SQLITE_CONF_OPT += --disable-readline
 endif
 
-$(eval $(call AUTOTARGETS,package,sqlite))
-
-$(SQLITE_TARGET_UNINSTALL):
-	$(call MESSAGE,"Uninstalling")
+define SQLITE_UNINSTALL_TARGET_CMDS
 	rm -f $(TARGET_DIR)/usr/bin/sqlite3
 	rm -f $(TARGET_DIR)/usr/lib/libsqlite3*
+endef
+
+define SQLITE_UNINSTALL_STAGING_CMDS
 	rm -f $(STAGING_DIR)/usr/bin/sqlite3
 	rm -f $(STAGING_DIR)/usr/lib/libsqlite3*
 	rm -f $(STAGING_DIR)/usr/lib/pkgconfig/sqlite3.pc
 	rm -f $(STAGING_DIR)/usr/include/sqlite3*.h
-	rm -f $(SQLITE_TARGET_INSTALL_TARGET) $(SQLITE_HOOK_POST_INSTALL)
+endef
 
+$(eval $(call AUTOTARGETS,package,sqlite))

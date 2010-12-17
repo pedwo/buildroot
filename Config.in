@@ -8,7 +8,7 @@ config BR2_HAVE_DOT_CONFIG
 
 config BR2_VERSION
 	string
-	default "2010.08"
+	option env="BR2_VERSION_FULL"
 
 source "target/Config.in.arch"
 source "target/device/Config.in"
@@ -19,27 +19,19 @@ menu "Commands"
 
 config BR2_WGET
 	string "Wget command"
-	default "wget --passive-ftp -nd"
+	default "wget --passive-ftp -nd -t 3"
 
-config BR2_SVN_CO
-	string "Subversion (svn) command to download source tree"
-	default "svn co"
+config BR2_SVN
+	string "Subversion (svn) command"
+	default "svn"
 
-config BR2_SVN_UP
-	string "Subversion (svn) command to update source tree"
-	default "svn up"
-
-config BR2_BZR_CO
-	string "Bazaar (bzr) command to download source tree"
-	default "bzr co"
-
-config BR2_BZR_UP
-	string "Bazaar (bzr) command to update source tree"
-	default "bzr up"
+config BR2_BZR
+	string "Bazaar (bzr) command"
+	default "bzr"
 
 config BR2_GIT
-	string "Git command to download source tree"
-	default "git clone"
+	string "Git command"
+	default "git"
 
 config BR2_ZCAT
 	string "zcat command"
@@ -263,20 +255,6 @@ config BR2_HAVE_DEVFILES
 	help
 	  Install headers and static libraries in the
 	  target filesystem
-
-menu "Advanced"
-
-config BR2_CONFIG_CACHE
-	bool "Use a central configure cache file (EXPERIMENTAL)"
-	help
-	  Notice: This is experimental and known to break with certain
-	  package combinations.
-
-	  This determines if a central config cache is used by
-	  packages, reducing the configure time for packages as each
-	  one caches its findings.
-
-endmenu
 
 endmenu
 

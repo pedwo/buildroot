@@ -83,9 +83,8 @@ BR2_KERNEL_ARCH_PATCH_DIR="target/device/Atmel/arch-avr32/kernel-patches-$(BR2_K
 # Build options
 #
 BR2_WGET="wget --passive-ftp --retry-connrefused --waitretry=10"
-BR2_SVN_CO="svn co"
-BR2_SVN_UP="svn up"
-BR2_GIT="git clone"
+BR2_SVN="svn"
+BR2_GIT="git"
 BR2_ZCAT="zcat"
 BR2_BZCAT="bzcat"
 BR2_TAR_OPTIONS=""
@@ -112,7 +111,6 @@ BR2_TOPDIR_PREFIX=""
 BR2_TOPDIR_SUFFIX=""
 BR2_JLEVEL=2
 # BR2_DEPRECATED is not set
-# BR2_CONFIG_CACHE is not set
 # BR2_ENABLE_DEBUG is not set
 BR2_STRIP_strip=y
 # BR2_STRIP_sstrip is not set
@@ -544,7 +542,6 @@ BR2_PACKAGE_MTD_MTD_DEBUG=y
 # ntfs-3g requires a toolchain with LARGEFILE and WCHAR support
 #
 # BR2_PACKAGE_PCIUTILS is not set
-# BR2_PACKAGE_PCMCIA is not set
 # BR2_PACKAGE_SETSERIAL is not set
 # BR2_PACKAGE_SFDISK is not set
 # BR2_PACKAGE_SMARTMONTOOLS is not set
@@ -731,7 +728,6 @@ BR2_PACKAGE_XSERVER_none=y
 # BR2_PACKAGE_PANGO is not set
 # BR2_PACKAGE_LIBDRM is not set
 # BR2_PACKAGE_LIBERATION is not set
-# BR2_PACKAGE_LIBGLIB12 is not set
 BR2_PACKAGE_LIBGLIB2=y
 # BR2_PACKAGE_OPENMOTIF is not set
 # BR2_PACKAGE_FONTCONFIG is not set

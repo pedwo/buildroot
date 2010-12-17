@@ -10,7 +10,6 @@ GVFS_SOURCE = gvfs-$(GVFS_VERSION).tar.gz
 GVFS_SITE = http://ftp.gnome.org/pub/GNOME/sources/gvfs/$(GVFS_VERSION_MAJOR)
 GVFS_INSTALL_STAGING = NO
 GVFS_INSTALL_TARGET = YES
-GVFS_INSTALL_TARGET_OPT = DESTDIR=$(TARGET_DIR) install
 GVFS_AUTORECONF = NO
 GVFS_DEPENDENCIES = host-pkg-config host-libglib2 libglib2 dbus-glib shared-mime-info
 GVFS_LIBTOOL_PATCH = NO
@@ -69,12 +68,10 @@ else
 GVFS_CONF_OPT += --disable-samba
 endif
 
-$(eval $(call AUTOTARGETS,package,gvfs))
-
-$(GVFS_HOOK_POST_INSTALL): $(GVFS_TARGET_INSTALL_TARGET)
+define GVFS_REMOVE_USELESS_BINARY
 	rm $(TARGET_DIR)/usr/bin/gvfs-less
-ifneq ($(BR2_ENABLE_DEBUG),y)
-	$(STRIPCMD) $(STRIP_STRIP_ALL) $(TARGET_DIR)/usr/bin/gvfs*
-	$(STRIPCMD) $(STRIP_STRIP_ALL) $(TARGET_DIR)/usr/libexec/gvfs*
-endif
-	touch $@
+endef
+
+GVFS_POST_INSTALL_TARGET_HOOKS += GVFS_REMOVE_USELESS_BINARY
+
+$(eval $(call AUTOTARGETS,package,gvfs))

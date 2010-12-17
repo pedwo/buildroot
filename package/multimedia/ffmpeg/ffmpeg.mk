@@ -13,8 +13,6 @@ FFMPEG_CONF_OPT = \
 	--prefix=/usr		\
 	--enable-shared 	\
 	--disable-avfilter	\
-	--disable-postproc	\
-	--disable-swscale	\
 	--disable-vhook		\
 
 ifeq ($(BR2_PACKAGE_FFMPEG_GPL),y)
@@ -47,6 +45,18 @@ ifeq ($(BR2_PACKAGE_FFMPEG_FFSERVER),y)
 FFMPEG_CONF_OPT += --enable-ffserver
 else
 FFMPEG_CONF_OPT += --disable-ffserver
+endif
+
+ifeq ($(BR2_PACKAGE_FFMPEG_POSTPROC),y)
+FFMPEG_CONF_OPT += --enable-postproc
+else
+FFMPEG_CONF_OPT += --disable-postproc
+endif
+
+ifeq ($(BR2_PACKAGE_FFMPEG_SWSCALE),y)
+FFMPEG_CONF_OPT += --enable-swscale
+else
+FFMPEG_CONF_OPT += --disable-swscale
 endif
 
 ifneq ($(call qstrip,$(BR2_PACKAGE_FFMPEG_ENCODERS)),all)
@@ -133,8 +143,5 @@ define FFMPEG_CONFIGURE_CMDS
 		$(FFMPEG_CONF_OPT) \
 	)
 endef
-
-# Override FFMPEG_INSTALL_TARGET_OPT: FFmpeg does not support install-strip
-FFMPEG_INSTALL_TARGET_OPT = DESTDIR=$(TARGET_DIR) install
 
 $(eval $(call AUTOTARGETS,package/multimedia,ffmpeg))
