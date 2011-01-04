@@ -1,0 +1,9 @@
+config BR2_PACKAGE_GST_OPENMAX
+	bool "gst-openmax"
+	depends on BR2_PACKAGE_GSTREAMER
+	select BR2_PACKAGE_GST_PLUGINS_BASE
+	help
+	  GStreamer wrapper for OpenMAX IL components.
+
+	  http://www.freedesktop.org/wiki/GstOpenMAX
+
