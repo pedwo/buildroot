@@ -1,6 +1,7 @@
 config BR2_PACKAGE_SHJPEG
 	bool "shjpeg"
 	select BR2_PACKAGE_UIOMUX
+	select BR2_PACKAGE_JPEG
 	help
 	  libshjpeg: A library for controlling the SH-Mobile JPEG Processing Unit (JPU).
 
