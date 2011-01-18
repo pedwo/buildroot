@@ -547,6 +547,18 @@ BR2_PACKAGE_ZLIB=y
 # BR2_PACKAGE_IPKG is not set
 
 #
+# Renesas SH specific libraries
+#
+# BR2_PACKAGE_UIOMUX is not set
+# BR2_PACKAGE_SHVEU is not set
+# BR2_PACKAGE_SHBEU is not set
+# BR2_PACKAGE_SHCODECS is not set
+# BR2_PACKAGE_SHJPEG is not set
+# BR2_PACKAGE_SIGHTTPD is not set
+# BR2_PACKAGE_GST_SH_MOBILE is not set
+# BR2_PACKAGE_GST_SHRTSP is not set
+
+#
 # Shell and utilities
 #
 # BR2_PACKAGE_AT is not set
