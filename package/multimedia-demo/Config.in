@@ -1,0 +1,6 @@
+config BR2_PACKAGE_REN_MM_DEMO
+	bool "Renesas MS7724 multimedia demo launcher"
+	depends on BR2_PACKAGE_QT
+	help
+	  A Qt app providing a simple way to run MS7724 multimedia demos.
+
