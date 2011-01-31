@@ -458,6 +458,7 @@ source "package/shjpeg/Config.in"
 source "package/sighttpd/Config.in"
 source "package/gst-sh-mobile/Config.in"
 source "package/gst-shrtsp/Config.in"
+source "package/multimedia-demo/Config.in"
 endmenu
 
 menu "Shell and utilities"
