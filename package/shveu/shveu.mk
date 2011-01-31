@@ -3,9 +3,9 @@
 # shveu
 #
 #############################################################
-SHVEU_VERSION = 1.5.2
+SHVEU_VERSION = 1.6.0
 SHVEU_SOURCE = libshveu-$(SHVEU_VERSION).tar.gz
-SHVEU_SITE = http://github.com/downloads/pedwo/libshveu
+SHVEU_SITE = https://github.com/downloads/pedwo/libshveu
 
 SHVEU_AUTORECONF = YES
 SHVEU_INSTALL_STAGING = YES
