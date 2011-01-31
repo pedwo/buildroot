@@ -16,10 +16,17 @@ config BR2_TARGET_AP325RXA
 	help
 	 Algo AP325RXA board
 
+config BR2_TARGET_SH7785LCR
+	bool "SH7785LCR"
+	depends on BR2_sh4
+	help
+	 SH7785LCR board
+
 config BR2_BOARD_NAME
 	string
 	default "MS7724"		if BR2_TARGET_MS7724
 	default "AP325RXA"		if BR2_TARGET_AP325RXA
+	default "SH7785LCR"		if BR2_TARGET_SH7785LCR
 
 config BR2_BOARD_PATH
 	string "Board Path"
