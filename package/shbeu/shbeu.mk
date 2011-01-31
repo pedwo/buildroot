@@ -3,9 +3,9 @@
 # shbeu
 #
 #############################################################
-SHBEU_VERSION = 1.0.2
+SHBEU_VERSION = 1.0.3
 SHBEU_SOURCE = libshbeu-$(SHBEU_VERSION).tar.gz
-SHBEU_SITE = http://github.com/downloads/pedwo/libshbeu
+SHBEU_SITE = https://github.com/downloads/pedwo/libshbeu
 
 SHBEU_AUTORECONF = YES
 SHBEU_INSTALL_STAGING = YES
