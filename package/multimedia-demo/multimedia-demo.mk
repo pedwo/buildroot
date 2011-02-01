@@ -7,7 +7,7 @@
 #############################################################
 REN_MM_DEMO_VERSION:=0.1.0
 REN_MM_DEMO_SOURCE:=renesas-qt-demo-$(REN_MM_DEMO_VERSION).tar.gz
-REN_MM_DEMO_SITE:=https://github.com/pedwo/Multimedia-Demo-UI/tarball/0.1.0
+REN_MM_DEMO_SITE:=https://github.com/downloads/pedwo/Multimedia-Demo-UI
 
 REN_MM_DEMO_DEPENDENCIES = qt
 
