@@ -1,8 +1,8 @@
 diff --git a/configure.in b/configure.in
-index 01b6f2e..58110e8 100644
+index 01b6f2e..93c2edd 100644
 --- a/configure.in
 +++ b/configure.in
-@@ -1179,7 +1179,11 @@ if test "$checkfor_savage" = "yes" && test "$have_sysio" = "yes"; then
+@@ -1179,7 +1179,14 @@ if test "$checkfor_savage" = "yes" && test "$have_sysio" = "yes"; then
  fi
  
  if test "$checkfor_sh772x" = "yes" && test "$have_sh4" = "yes"; then
@@ -12,6 +12,9 @@ index 01b6f2e..58110e8 100644
 +  if test "$sh772x" = "no"; then
 +       AC_MSG_WARN([*** Missing UIOMUX, SHBEU or SHJPEG library -- sh772x driver will not be built.])
 +  fi
++fi
++if test "$sh772x" = "yes"; then
++  AC_DEFINE(HAVE_GFX_SH772X, [], [Define to 1 if sh772x])
  fi
  
  if test "$checkfor_sis315" = "yes"; then
@@ -394,3 +397,49 @@ index db2a4d1..5bcd256 100644
  
  } SH7722DeviceData;
  
+diff --git a/systems/devmem/Makefile.am b/systems/devmem/Makefile.am
+index b85d92a..f2c47b7 100644
+--- a/systems/devmem/Makefile.am
++++ b/systems/devmem/Makefile.am
+@@ -24,7 +24,8 @@ systems_LTLIBRARIES = libdirectfb_devmem.la
+ 
+ libdirectfb_devmem_la_LDFLAGS = \
+ 	-avoid-version	\
+-	-module
++	-module \
++	$(SH772X_DEP_LIBS)
+ 
+ libdirectfb_devmem_la_SOURCES = \
+ 	devmem.c		\
+@@ -36,5 +37,4 @@ libdirectfb_devmem_la_LIBADD = \
+ 	$(top_builddir)/lib/fusion/libfusion.la \
+ 	$(top_builddir)/src/libdirectfb.la
+ 
+-
+ include $(top_srcdir)/rules/libobject.make
+diff --git a/systems/devmem/devmem.c b/systems/devmem/devmem.c
+index 2a19538..e23ce70 100644
+--- a/systems/devmem/devmem.c
++++ b/systems/devmem/devmem.c
+@@ -49,6 +49,10 @@
+ 
+ #include <core/core_system.h>
+ 
++#ifdef HAVE_GFX_SH772X
++#include <uiomux/uiomux.h>
++#endif
++
+ DFB_CORE_SYSTEM( devmem )
+ 
+ /**********************************************************************************************************************/
+@@ -88,6 +92,10 @@ MapMemAndReg( DevMemData    *data,
+           }
+      }
+ 
++#ifdef HAVE_GFX_SH772X
++	uiomux_register (data->mem, mem_phys, mem_length);
++#endif
++
+      close( fd );
+ 
+      return DFB_OK;
