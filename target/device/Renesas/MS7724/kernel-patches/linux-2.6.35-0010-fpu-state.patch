@@ -1,0 +1,46 @@
+From 9865021f79c545ccd8398bd1809c1a01d1039334 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Tue, 1 Feb 2011 17:09:45 +0000
+Subject: [PATCH] sh: Fix ptrace fpu state initialisation
+
+PTRACE_GETFPREGS/SETFPREGS was added some time ago, but gdb-server
+still accesses the FPU state using the PTRACE_PEEKUSR/POKEUSR
+commands. In this case, xstate was not initialised.
+
+Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
+---
+ arch/sh/kernel/ptrace_32.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/arch/sh/kernel/ptrace_32.c b/arch/sh/kernel/ptrace_32.c
+index 6c4bbba..df0144c 100644
+--- a/arch/sh/kernel/ptrace_32.c
++++ b/arch/sh/kernel/ptrace_32.c
+@@ -363,9 +363,13 @@ long arch_ptrace(struct task_struct *child, long request, long addr, long data)
+ 					tmp = FPSCR_INIT;
+ 				else
+ 					tmp = 0;
+-			} else
++			} else {
++				ret = init_fpu(child);
++				if (ret)
++					break;
+ 				tmp = ((long *)child->thread.xstate)
+ 					[(addr - (long)&dummy->fpu) >> 2];
++			}
+ 		} else if (addr == (long) &dummy->u_fpvalid)
+ 			tmp = !!tsk_used_math(child);
+ 		else if (addr == PT_TEXT_ADDR)
+@@ -392,6 +396,9 @@ long arch_ptrace(struct task_struct *child, long request, long addr, long data)
+ 			ret = put_stack_long(child, addr, data);
+ 		else if (addr >= (long) &dummy->fpu &&
+ 			 addr < (long) &dummy->u_fpvalid) {
++			ret = init_fpu(child);
++			if (ret)
++				break;
+ 			set_stopped_child_used_math(child);
+ 			((long *)child->thread.xstate)
+ 				[(addr - (long)&dummy->fpu) >> 2] = data;
+-- 
+1.7.1
+

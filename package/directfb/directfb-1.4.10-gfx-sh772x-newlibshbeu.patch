@@ -1,5 +1,5 @@
 diff --git a/configure.in b/configure.in
-index 01b6f2e..93c2edd 100644
+index 01b6f2e..ad5230b 100644
 --- a/configure.in
 +++ b/configure.in
 @@ -1179,7 +1179,14 @@ if test "$checkfor_savage" = "yes" && test "$have_sysio" = "yes"; then
@@ -8,7 +8,7 @@ index 01b6f2e..93c2edd 100644
  if test "$checkfor_sh772x" = "yes" && test "$have_sh4" = "yes"; then
 -  sh772x=yes
 +  PKG_CHECK_MODULES([SH772X_DEP],
-+    [uiomux >= 1.5.0 shbeu >= 1.0.2 shjpeg >= 1.3.1], [sh772x=yes], [sh772x=no])
++    [uiomux >= 1.5.0 shbeu >= 1.0.2 shjpeg >= 1.3.3], [sh772x=yes], [sh772x=no])
 +  if test "$sh772x" = "no"; then
 +       AC_MSG_WARN([*** Missing UIOMUX, SHBEU or SHJPEG library -- sh772x driver will not be built.])
 +  fi
@@ -40,7 +40,7 @@ index 1e1dcb4..ccdedbc 100644
  libdirectfb_sh7722_la_LIBADD = \
  	$(top_builddir)/src/libdirectfb.la
 diff --git a/gfxdrivers/sh772x/sh7722.c b/gfxdrivers/sh772x/sh7722.c
-index 0b2b9c8..e7aa72a 100644
+index 0b2b9c8..a038e09 100644
 --- a/gfxdrivers/sh772x/sh7722.c
 +++ b/gfxdrivers/sh772x/sh7722.c
 @@ -54,6 +54,7 @@ DFB_GRAPHICS_DRIVER( sh7722 )
@@ -51,46 +51,24 @@ index 0b2b9c8..e7aa72a 100644
  
  D_DEBUG_DOMAIN( SH7722_Driver, "SH7722/Driver", "Renesas SH7722 Driver" );
  
-@@ -239,22 +240,21 @@ driver_init_device( CoreGraphicsDevice *device,
-      { 
-      	  struct fb_fix_screeninfo fsi;
+@@ -241,7 +242,7 @@ driver_init_device( CoreGraphicsDevice *device,
       	  struct fb_var_screeninfo vsi;
--		  int fbdev;
+ 		  int fbdev;
  
 -		  if ((fbdev = open("/dev/fb0", O_RDONLY)) < 0) {
-+		  if ((sdev->fbdev = open("/dev/fb0", O_RDWR)) < 0) {
++		  if ((fbdev = open("/dev/fb0", O_RDWR)) < 0) {
  			   D_ERROR( "SH7722/Driver: Can't open fbdev to get LCDC info!\n" );
  			   return DFB_FAILURE;
  		  }
- 
--		  if (ioctl(fbdev, FBIOGET_FSCREENINFO, &fsi) < 0) {
-+		  if (ioctl(sdev->fbdev, FBIOGET_FSCREENINFO, &fsi) < 0) {
- 			   D_ERROR( "SH7722/Driver: FBIOGET_FSCREEINFO failed.\n" );
--			   close(fbdev);
-+			   close(sdev->fbdev);
- 			   return DFB_FAILURE;
- 		  }
- 
--		  if (ioctl(fbdev, FBIOGET_VSCREENINFO, &vsi) < 0) {
-+		  if (ioctl(sdev->fbdev, FBIOGET_VSCREENINFO, &vsi) < 0) {
- 			   D_ERROR( "SH7722/Driver: FBIOGET_VSCREEINFO failed.\n" );
--			   close(fbdev);
-+			   close(sdev->fbdev);
- 			   return DFB_FAILURE;
- 		  }
- 
-@@ -264,15 +264,15 @@ driver_init_device( CoreGraphicsDevice *device,
+@@ -264,7 +265,6 @@ driver_init_device( CoreGraphicsDevice *device,
  		  sdev->lcd_size   = fsi.smem_len;
  		  sdev->lcd_offset = 0;
  		  sdev->lcd_phys   = fsi.smem_start;
 -#if 0
  		  sdrv->lcd_virt   = mmap(NULL, fsi.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED,
--				  				  fbdev, 0);
-+				  				  sdev->fbdev, 0);
+ 				  				  fbdev, 0);
  		  if (sdrv->lcd_virt == MAP_FAILED) {
- 			   D_PERROR( "SH7722/Driver: mapping fbdev failed.\n" );
--			   close(fbdev);
-+			   close(sdev->fbdev);
+@@ -273,6 +273,7 @@ driver_init_device( CoreGraphicsDevice *device,
  			   return DFB_FAILURE;
  		  }
  
@@ -98,19 +76,18 @@ index 0b2b9c8..e7aa72a 100644
            /* Clear LCD buffer. */
            switch (sdev->lcd_format) {
                 case DSPF_RGB16:
-@@ -288,9 +288,9 @@ driver_init_device( CoreGraphicsDevice *device,
+@@ -288,7 +289,9 @@ driver_init_device( CoreGraphicsDevice *device,
                      D_BUG( "unsupported format" );
                      return DFB_BUG;
            }
 -#endif
- 
--		  close(fbdev);
++
 +          /* Register the framebuffer with UIOMux */
 +          uiomux_register (sdrv->lcd_virt, sdev->lcd_phys, sdev->lcd_size);
+ 
+ 		  close(fbdev);
       }     
- #else
-      sdev->lcd_width  = SH7722_LCD_WIDTH;
-@@ -400,12 +400,15 @@ driver_init_device( CoreGraphicsDevice *device,
+@@ -400,12 +403,15 @@ driver_init_device( CoreGraphicsDevice *device,
       /* Set output pixel format of the BEU. */
       switch (sdev->lcd_format) {
            case DSPF_RGB16:
@@ -129,7 +106,7 @@ index 0b2b9c8..e7aa72a 100644
                 break;
  
            default:
-@@ -423,11 +426,11 @@ driver_init_device( CoreGraphicsDevice *device,
+@@ -423,11 +429,11 @@ driver_init_device( CoreGraphicsDevice *device,
       fusion_skirmish_init( &sdev->beu_lock, "BEU", dfb_core_world(sdrv->core) );
  
       /* libshbeu */
@@ -145,25 +122,8 @@ index 0b2b9c8..e7aa72a 100644
       sdev->shbeu_dest.x = 0;
       sdev->shbeu_dest.y = 0;
       
-@@ -439,10 +442,16 @@ driver_close_device( CoreGraphicsDevice *device,
-                      void               *driver_data,
-                      void               *device_data )
- {
-+     SH7722DriverData *sdrv = driver_data;
-      SH7722DeviceData *sdev = device_data;
- 
-      D_DEBUG_AT( SH7722_Driver, "%s()\n", __FUNCTION__ );
- 
-+#ifdef SH772X_FBDEV_SUPPORT
-+     uiomux_unregister (sdrv->lcd_virt);
-+     close(sdev->fbdev);
-+#endif
-+
-      /* Destroy BEU lock. */
-      fusion_skirmish_destroy( &sdev->beu_lock );
- }
 diff --git a/gfxdrivers/sh772x/sh7722_jpeg.c b/gfxdrivers/sh772x/sh7722_jpeg.c
-index 22eee55..ad55e99 100644
+index 22eee55..5e8f118 100644
 --- a/gfxdrivers/sh772x/sh7722_jpeg.c
 +++ b/gfxdrivers/sh772x/sh7722_jpeg.c
 @@ -257,9 +257,6 @@ IDirectFBImageProvider_SH7722_JPEG_RenderTo( IDirectFBImageProvider *thiz,
@@ -189,17 +149,16 @@ index 22eee55..ad55e99 100644
                 break;
            case DSPF_A8:
                 pixelfmt = SHJPEG_PF_GRAYSCALE;
-@@ -289,8 +283,7 @@ IDirectFBImageProvider_SH7722_JPEG_RenderTo( IDirectFBImageProvider *thiz,
-      
+@@ -290,7 +284,7 @@ IDirectFBImageProvider_SH7722_JPEG_RenderTo( IDirectFBImageProvider *thiz,
       }
  
--
+ 
 -     if (shjpeg_decode_run( data->info, pixelfmt, phys, cphys, rect.w, rect.h, lock.pitch) < 0)
 +     if (shjpeg_decode_run( data->info, pixelfmt, phys, rect.w, rect.h, lock.pitch) < 0)
            ret = DFB_FAILURE;
  
       dfb_surface_unlock_buffer( dst_surface, &lock );
-@@ -455,17 +448,17 @@ IDirectFBImageProvider_SH7722_JPEG_WriteBack( IDirectFBImageProvider *thiz,
+@@ -455,17 +449,17 @@ IDirectFBImageProvider_SH7722_JPEG_WriteBack( IDirectFBImageProvider *thiz,
  
            /* backup callbacks and private data and setup for file io */
            shjpeg_sops *sops_tmp       = data->info->sops;
@@ -220,7 +179,7 @@ index 22eee55..ad55e99 100644
                                                
            dfb_surface_unlock_buffer( src_surface, &lock );
       }
-@@ -536,7 +529,7 @@ Construct( IDirectFBImageProvider *thiz,
+@@ -536,7 +530,7 @@ Construct( IDirectFBImageProvider *thiz,
  
            /* set callbacks to context */
            data->info->sops = &sops_databuffer;
@@ -230,7 +189,7 @@ index 22eee55..ad55e99 100644
            if (shjpeg_decode_init( data->info ) < 0) {
                 buffer->Release( buffer );
 diff --git a/gfxdrivers/sh772x/sh7722_layer.c b/gfxdrivers/sh772x/sh7722_layer.c
-index 1c36b9d..edafbe1 100644
+index 1c36b9d..dae702a 100644
 --- a/gfxdrivers/sh772x/sh7722_layer.c
 +++ b/gfxdrivers/sh772x/sh7722_layer.c
 @@ -90,13 +90,13 @@ sh7722InitLayer( CoreLayer                  *layer,
@@ -251,7 +210,21 @@ index 1c36b9d..edafbe1 100644
  
  
       return DFB_OK;
-@@ -238,8 +238,8 @@ sh7722SetRegion( CoreLayer                  *layer,
+@@ -130,13 +130,8 @@ sh7722TestRegion( CoreLayer                  *layer,
+           case DSPF_RGB32:
+           case DSPF_RGB24:
+           case DSPF_RGB16:
+-               break;
+-
+           case DSPF_NV12:
+           case DSPF_NV16:
+-               /* YUV only for first input */
+-               if (slay->layer != SH7722_LAYER_INPUT1)
+-                    fail |= CLRCF_FORMAT;
+                break;
+ 
+           default:
+@@ -238,8 +233,8 @@ sh7722SetRegion( CoreLayer                  *layer,
                 ch = sdev->lcd_height - config->dest.y;
  
            /* libshbeu: Set width and height. */
@@ -262,7 +235,7 @@ index 1c36b9d..edafbe1 100644
  
       }
  
-@@ -248,22 +248,22 @@ sh7722SetRegion( CoreLayer                  *layer,
+@@ -248,22 +243,22 @@ sh7722SetRegion( CoreLayer                  *layer,
            CoreSurfaceBuffer *buffer = lock->buffer;
  
            /* libshbeu: Set buffer pitch. */
@@ -291,7 +264,7 @@ index 1c36b9d..edafbe1 100644
            }
  
            sreg->surface = surface;
-@@ -274,30 +274,31 @@ sh7722SetRegion( CoreLayer                  *layer,
+@@ -274,30 +269,31 @@ sh7722SetRegion( CoreLayer                  *layer,
            /* Set pixel format. */
            switch (config->format) {
                 case DSPF_NV12:
@@ -312,7 +285,7 @@ index 1c36b9d..edafbe1 100644
  
                 case DSPF_RGB24:
 -                    sdev->shbeu_src[n].format = V4L2_PIX_FMT_RGB24; //FIXME: implement in libshbeu
-+                    sdev->shbeu_src[n].s.format = REN_RGB24; //FIXME: implement in libshbeu
++                    sdev->shbeu_src[n].s.format = REN_BGR24;
                      break;
  
                 case DSPF_RGB16:
@@ -330,7 +303,7 @@ index 1c36b9d..edafbe1 100644
                 default:
                      break;
            }
-@@ -311,9 +312,9 @@ sh7722SetRegion( CoreLayer                  *layer,
+@@ -311,9 +307,9 @@ sh7722SetRegion( CoreLayer                  *layer,
  
            /* libshbeu: Enable/disable alpha channel. */
            if ((config->options & DLOP_ALPHACHANNEL) && DFB_PIXELFORMAT_HAS_ALPHA(config->format))
@@ -342,7 +315,7 @@ index 1c36b9d..edafbe1 100644
       }
  
  //TODO: Implement CLUT in libshbeu
-@@ -372,7 +373,7 @@ sh7722RemoveRegion( CoreLayer *layer,
+@@ -372,7 +368,7 @@ sh7722RemoveRegion( CoreLayer *layer,
  
       /* libshbeu: reorder src surfaces and start blending. */
       if (sdev->input_mask) {
@@ -351,7 +324,7 @@ index 1c36b9d..edafbe1 100644
            int nr_surfaces = 0;
            if (sdev->input_mask & 1) {
                 src[nr_surfaces] = &sdev->shbeu_src[0];
-@@ -427,11 +428,11 @@ sh7722FlipRegion( CoreLayer             *layer,
+@@ -427,11 +423,11 @@ sh7722FlipRegion( CoreLayer             *layer,
       fusion_skirmish_prevail( &sdev->beu_lock );
  
       /* set new physical address for layer */
@@ -365,7 +338,7 @@ index 1c36b9d..edafbe1 100644
            int nr_surfaces = 0;
            if (sdev->input_mask & 1) {
                 src[nr_surfaces] = &sdev->shbeu_src[0];
-@@ -475,7 +476,7 @@ sh7722UpdateRegion( CoreLayer             *layer,
+@@ -475,7 +471,7 @@ sh7722UpdateRegion( CoreLayer             *layer,
  
       /* libshbeu: reorder src surfaces and start blending. */
       if (sdev->input_mask) {
@@ -375,18 +348,10 @@ index 1c36b9d..edafbe1 100644
            if (sdev->input_mask & 1) {
                 src[nr_surfaces] = &sdev->shbeu_src[0];
 diff --git a/gfxdrivers/sh772x/sh7722_types.h b/gfxdrivers/sh772x/sh7722_types.h
-index db2a4d1..5bcd256 100644
+index db2a4d1..6007bb3 100644
 --- a/gfxdrivers/sh772x/sh7722_types.h
 +++ b/gfxdrivers/sh772x/sh7722_types.h
-@@ -59,6 +59,7 @@ typedef struct {
-      int                      lcd_size;
-      unsigned long            lcd_phys;
-      DFBSurfacePixelFormat    lcd_format;
-+     int                      fbdev;
- 
-      /* state validation */
-      int                      v_flags;
-@@ -107,8 +108,8 @@ typedef struct {
+@@ -107,8 +107,8 @@ typedef struct {
       u32                      color16;
  
       /* libshbeu */
