@@ -59,22 +59,22 @@ config BR2_TARGET_GENERIC_GETTY_TTYSAC3
 	depends on BR2_arm
 config BR2_TARGET_GENERIC_GETTY_TTYSC0
 	bool "ttySC0"
-	depends on BR2_sh
+	depends on BR2_TARGET_RENESAS
 config BR2_TARGET_GENERIC_GETTY_TTYSC1
 	bool "ttySC1"
-	depends on BR2_sh
+	depends on BR2_TARGET_RENESAS
 config BR2_TARGET_GENERIC_GETTY_TTYSC2
 	bool "ttySC2"
-	depends on BR2_sh
+	depends on BR2_TARGET_RENESAS
 config BR2_TARGET_GENERIC_GETTY_TTYSC3
 	bool "ttySC3"
-	depends on BR2_sh
+	depends on BR2_TARGET_RENESAS
 config BR2_TARGET_GENERIC_GETTY_TTYSC4
 	bool "ttySC4"
-	depends on BR2_sh
+	depends on BR2_TARGET_RENESAS
 config BR2_TARGET_GENERIC_GETTY_TTYSC5
 	bool "ttySC5"
-	depends on BR2_sh
+	depends on BR2_TARGET_RENESAS
 config BR2_TARGET_GENERIC_GETTY_TTYMXC0
 	bool "ttymxc0"
 	depends on BR2_arm

@@ -1,6 +1,6 @@
 menuconfig BR2_TARGET_RENESAS
 	bool "Renesas Device Support"
-	depends on BR2_sh
+	depends on BR2_sh || BR2_cortex_a8
 
 if BR2_TARGET_RENESAS
 
@@ -22,11 +22,18 @@ config BR2_TARGET_SH7785LCR
 	help
 	 SH7785LCR board
 
+config BR2_TARGET_AP4EVB
+	bool "AP4EVB"
+	depends on BR2_cortex_a8
+	help
+	 AP4 EVB Development board (ROP7372LC)
+
 config BR2_BOARD_NAME
 	string
 	default "MS7724"		if BR2_TARGET_MS7724
 	default "AP325RXA"		if BR2_TARGET_AP325RXA
 	default "SH7785LCR"		if BR2_TARGET_SH7785LCR
+	default "AP4EVB"		if BR2_TARGET_AP4EVB
 
 config BR2_BOARD_PATH
 	string "Board Path"
