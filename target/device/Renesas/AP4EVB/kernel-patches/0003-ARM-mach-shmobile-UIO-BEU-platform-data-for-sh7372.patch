@@ -1,0 +1,136 @@
+From 5c5a7322331f3591beaba108e645b0315a4e4d3c Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Mon, 28 Feb 2011 10:57:07 +0000
+Subject: [PATCH 3/4] ARM: mach-shmobile: UIO BEU platform data for sh7372
+
+Export the sh7372 BEU multimedia hardware block using UIO.
+
+The amount of physically continguous memory assigned to
+each hardware block can be configured using the kernel
+command line option "memchunk".
+---
+ arch/arm/mach-shmobile/setup-sh7372.c |   94 +++++++++++++++++++++++++++++++++
+ 1 files changed, 94 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-shmobile/setup-sh7372.c b/arch/arm/mach-shmobile/setup-sh7372.c
+index a760115..c74cb13 100644
+--- a/arch/arm/mach-shmobile/setup-sh7372.c
++++ b/arch/arm/mach-shmobile/setup-sh7372.c
+@@ -835,6 +835,94 @@ static struct platform_device spu1_device = {
+ 	.num_resources	= ARRAY_SIZE(spu1_resources),
+ };
+ 
++/* BEU0 */
++static struct uio_info beu0_platform_data = {
++	.name = "BEU0",
++	.version = "0",
++	.irq = intcs_evt2irq(0x8A0),
++};
++
++static struct resource beu0_resources[] = {
++	[0] = {
++		.name	= "BEU0",
++		.start	= 0xfe930000,
++		.end	= 0xfe9333ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		/* place holder for contiguous memory */
++	},
++};
++
++static struct platform_device beu0_device = {
++	.name		= "uio_pdrv_genirq",
++	.id		= 8,
++	.dev = {
++		.platform_data	= &beu0_platform_data,
++	},
++	.resource	= beu0_resources,
++	.num_resources	= ARRAY_SIZE(beu0_resources),
++};
++
++/* BEU1 */
++static struct uio_info beu1_platform_data = {
++	.name = "BEU1",
++	.version = "0",
++	.irq = intcs_evt2irq(0x8C0),
++};
++
++static struct resource beu1_resources[] = {
++	[0] = {
++		.name	= "BEU1",
++		.start	= 0xfe934000,
++		.end	= 0xfe9373ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		/* place holder for contiguous memory */
++	},
++};
++
++static struct platform_device beu1_device = {
++	.name		= "uio_pdrv_genirq",
++	.id		= 9,
++	.dev = {
++		.platform_data	= &beu1_platform_data,
++	},
++	.resource	= beu1_resources,
++	.num_resources	= ARRAY_SIZE(beu1_resources),
++};
++
++/* BEU2 */
++static struct uio_info beu2_platform_data = {
++	.name = "BEU2",
++	.version = "0",
++	.irq = intcs_evt2irq(0x8E0),
++};
++
++static struct resource beu2_resources[] = {
++	[0] = {
++		.name	= "BEU2",
++		.start	= 0xfe938000,
++		.end	= 0xfe93b3ff,
++		.flags	= IORESOURCE_MEM,
++	},
++	[1] = {
++		/* place holder for contiguous memory */
++	},
++};
++
++static struct platform_device beu2_device = {
++	.name		= "uio_pdrv_genirq",
++	.id		= 10,
++	.dev = {
++		.platform_data	= &beu2_platform_data,
++	},
++	.resource	= beu2_resources,
++	.num_resources	= ARRAY_SIZE(beu2_resources),
++};
++
++
+ static struct platform_device *sh7372_early_devices[] __initdata = {
+ 	&scif0_device,
+ 	&scif1_device,
+@@ -862,6 +950,9 @@ static struct platform_device *sh7372_late_devices[] __initdata = {
+ 	&jpu_device,
+ 	&spu0_device,
+ 	&spu1_device,
++	&beu0_device,
++	&beu1_device,
++	&beu2_device,
+ };
+ 
+ void __init sh7372_add_standard_devices(void)
+@@ -883,6 +974,9 @@ void __init sh7372_reserve_memory(void)
+ 	shmobile_memchunk_setup(&jpu_device, "jpu", 2 << 20);
+ 	shmobile_memchunk_setup(&spu0_device, "spu0", 2 << 20);
+ 	shmobile_memchunk_setup(&spu1_device, "spu1", 2 << 20);
++	shmobile_memchunk_setup(&beu0_device, "beu0", 2 << 20);
++	shmobile_memchunk_setup(&beu1_device, "beu1", 2 << 20);
++	shmobile_memchunk_setup(&beu2_device, "beu2", 2 << 20);
+ }
+ 
+ void __init sh7372_add_early_devices(void)
+-- 
+1.7.1
+

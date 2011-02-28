@@ -1,0 +1,131 @@
+From d4f6f5951483637c681a9b03a59c37df6c7c532a Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Mon, 28 Feb 2011 10:23:16 +0000
+Subject: [PATCH 1/4] ARM: mach-shmobile: Add memchunk support V2
+
+Add SH-Mobile ARM support for "memchunk" V2. The code is based
+on the SH implementation but has been slightly modified to use
+memblock for physical memory reservation.
+
+The function shmobile_memchunk_setup() should be called during
+boot from the ->reserve() callback in struct machine_desc.
+
+Signed-off-by: Magnus Damm <damm@opensource.se>
+---
+ arch/arm/mach-shmobile/Makefile              |    1 +
+ arch/arm/mach-shmobile/include/mach/common.h |    3 +
+ arch/arm/mach-shmobile/memchunk.c            |   76 ++++++++++++++++++++++++++
+ 3 files changed, 80 insertions(+), 0 deletions(-)
+ create mode 100644 arch/arm/mach-shmobile/memchunk.c
+
+diff --git a/arch/arm/mach-shmobile/Makefile b/arch/arm/mach-shmobile/Makefile
+index e2507f6..aa93172 100644
+--- a/arch/arm/mach-shmobile/Makefile
++++ b/arch/arm/mach-shmobile/Makefile
+@@ -4,6 +4,7 @@
+ 
+ # Common objects
+ obj-y				:= timer.o console.o clock.o pm_runtime.o
++obj-y				+= memchunk.o
+ 
+ # CPU objects
+ obj-$(CONFIG_ARCH_SH7367)	+= setup-sh7367.o clock-sh7367.o intc-sh7367.o
+diff --git a/arch/arm/mach-shmobile/include/mach/common.h b/arch/arm/mach-shmobile/include/mach/common.h
+index 013ac0e..3de1a34 100644
+--- a/arch/arm/mach-shmobile/include/mach/common.h
++++ b/arch/arm/mach-shmobile/include/mach/common.h
+@@ -4,6 +4,9 @@
+ extern struct sys_timer shmobile_timer;
+ extern void shmobile_setup_console(void);
+ extern void shmobile_secondary_vector(void);
++struct platform_device;
++extern int shmobile_memchunk_setup(struct platform_device *pdev,
++				   char *name, unsigned long memsize);
+ struct clk;
+ extern int clk_init(void);
+ extern void shmobile_handle_irq_intc(struct pt_regs *);
+diff --git a/arch/arm/mach-shmobile/memchunk.c b/arch/arm/mach-shmobile/memchunk.c
+new file mode 100644
+index 0000000..9ccb121
+--- /dev/null
++++ b/arch/arm/mach-shmobile/memchunk.c
+@@ -0,0 +1,76 @@
++/*
++ * SH-Mobile "memchunk" - Physically contiguous memory reservation code
++ *
++ * Copyright (C) 2010  Magnus Damm
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ *
++ */
++#include <linux/init.h>
++#include <linux/platform_device.h>
++#include <linux/memblock.h>
++#include <mach/common.h>
++
++static int __init memchunk_setup(char *str)
++{
++	return 1; /* accept anything that begins with "memchunk." */
++}
++__setup("memchunk.", memchunk_setup);
++
++static void __init memchunk_cmdline_override(char *name, unsigned long *sizep)
++{
++	char *p = boot_command_line;
++	int k = strlen(name);
++
++	while ((p = strstr(p, "memchunk."))) {
++		p += 9; /* strlen("memchunk.") */
++		if (!strncmp(name, p, k) && p[k] == '=') {
++			p += k + 1;
++			*sizep = memparse(p, NULL);
++			pr_info("%s: forcing memory chunk size to 0x%08lx\n",
++				name, *sizep);
++			break;
++		}
++	}
++}
++
++int __init shmobile_memchunk_setup(struct platform_device *pdev,
++				   char *name, unsigned long memsize)
++{
++	struct resource *r;
++	u64 addr;
++
++	r = pdev->resource + pdev->num_resources - 1;
++	if (r->flags) {
++		pr_warning("%s: unable to find empty space for resource\n",
++			name);
++		return -EINVAL;
++	}
++
++	memchunk_cmdline_override(name, &memsize);
++	if (!memsize)
++		return 0;
++
++	addr = memblock_alloc(memsize, PAGE_SIZE);
++	if (addr == ~(u64)0) {
++		pr_warning("%s: unable to allocate memory\n", name);
++		return -ENOMEM;
++	}
++
++	r->flags = IORESOURCE_MEM;
++	r->start = addr;
++	r->end = r->start + memsize - 1;
++	r->name = name;
++	return 0;
++}
+-- 
+1.7.1
+
