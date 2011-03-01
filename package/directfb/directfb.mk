@@ -31,22 +31,6 @@ DIRECTFB_CONF_OPT = \
 
 DIRECTFB_DEPENDENCIES = freetype zlib
 
-# Renesas Start
-DIRECTFB_DIR:=$(BUILD_DIR)/directfb-$(DIRECTFB_VERSION)
-
-# Fix SH detection for CodeSourcery toolchain
-define DIRECTFB_SH_TOOLCHAIN
-	$(SED) 's/sh4-\* | sh3-\*)/sh4-\* | sh3-\* | sh-\*)/' $(DIRECTFB_DIR)/configure.in
-endef
-DIRECTFB_POST_EXTRACT_HOOKS += DIRECTFB_SH_TOOLCHAIN
-
-# Fix tslib detection
-define DIRECTFB_TSLIB_VERSION
-	$(SED) 's/tslib-0.0/tslib-1.0/' $(DIRECTFB_DIR)/configure.in
-endef
-DIRECTFB_POST_EXTRACT_HOOKS += DIRECTFB_TSLIB_VERSION
-# Renesas End
-
 ifeq ($(BR2_PACKAGE_DIRECTFB_MULTI),y)
 DIRECTFB_CONF_OPT += --enable-multi --enable-fusion
 DIRECTFB_DEPENDENCIES += linux-fusion
