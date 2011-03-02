@@ -10,6 +10,6 @@ GST_RTSP_LIBTOOL_PATCH = NO
 GST_RTSP_INSTALL_STAGING = YES
 GST_RTSP_INSTALL_TARGET = YES
 
-GST_RTSP_DEPENDENCIES = gst-plugins-base gstreamer liboil
+GST_RTSP_DEPENDENCIES = gst-plugins-base gstreamer
 
 $(eval $(call AUTOTARGETS,package/multimedia,gst-rtsp))
