@@ -8,8 +8,6 @@ GPSD_VERSION = 2.95
 GPSD_SITE = http://download.berlios.de/gpsd
 GPSD_INSTALL_STAGING = YES
 GPSD_CONF_OPT = --disable-static
-GPSD_LIBTOOL_PATCH = NO
-GPSD_USE_CONFIG_CACHE = NO
 GPSD_TARGET_BINS = cgps gpsctl gpsdecode gpsmon gpspipe gpxlogger lcdgps
 
 # Build libgpsmm if we've got C++
@@ -17,6 +15,15 @@ ifeq ($(BR2_INSTALL_LIBSTDCPP),y)
 	GPSD_CONF_OPT += --enable-libgpsmm LDFLAGS="$(TARGET_LDFLAGS) -lstdc++"
 else
 	GPSD_CONF_OPT += --disable-libgpsmm
+endif
+
+# Enable or disable Qt binding
+ifeq ($(BR2_PACKAGE_QT_NETWORK),y)
+	GPSD_CONF_ENV += QMAKE="$(QT_QMAKE)"
+	GPSD_CONF_OPT += --enable-libQgpsmm
+	GPSD_DEPENDENCIES += qt host-pkg-config
+else
+	GPSD_CONF_OPT += --disable-libQgpsmm
 endif
 
 # If libusb is available build it before so the package can use it

@@ -15,13 +15,11 @@
 # $1: arch specific sysroot directory
 # $2: library name
 # $3: destination directory of the libary, relative to $(TARGET_DIR)
-# $4: strip (y|n), default is to strip
 #
 copy_toolchain_lib_root = \
 	ARCH_SYSROOT_DIR="$(strip $1)"; \
 	LIB="$(strip $2)"; \
 	DESTDIR="$(strip $3)" ; \
-	STRIP="$(strip $4)"; \
  \
 	LIBS=`(cd $${ARCH_SYSROOT_DIR}; \
 		find -L . -path "./lib/$${LIB}.*"     -o \
@@ -39,13 +37,6 @@ copy_toolchain_lib_root = \
 				cp -d $${FULLPATH} $(TARGET_DIR)/$${DESTDIR}/; \
 			elif test -f $${FULLPATH}; then \
 				$(INSTALL) -D -m0755 $${FULLPATH} $(TARGET_DIR)/$${DESTDIR}/$${LIB}; \
-				case "$${STRIP}" in \
-				(0 | n | no) \
-;; \
-				(*) \
-					$(TARGET_CROSS)strip "$(TARGET_DIR)/$${DESTDIR}/$${LIB}"; \
-;; \
-				esac; \
 			else \
 				exit -1; \
 			fi; \
@@ -105,7 +96,7 @@ copy_toolchain_sysroot = \
 		if [ ! -d $${ARCH_SYSROOT_DIR}/usr/include ] ; then \
 			cp -a $${SYSROOT_DIR}/usr/include $(STAGING_DIR)/usr ; \
 		fi ; \
-		ln -s . $(STAGING_DIR)/$(ARCH_SUBDIR) ; \
+		ln -s . $(STAGING_DIR)/$${ARCH_SUBDIR} ; \
 	fi ; \
 	find $(STAGING_DIR) -type d | xargs chmod 755
 
@@ -155,6 +146,7 @@ check_glibc = \
 	$(call check_glibc_feature,BR2_INET_IPV6,IPv6 support) ;\
 	$(call check_glibc_feature,BR2_INET_RPC,RPC support) ;\
 	$(call check_glibc_feature,BR2_ENABLE_LOCALE,Locale support) ;\
+	$(call check_glibc_feature,BR2_USE_MMU,MMU support) ;\
 	$(call check_glibc_feature,BR2_USE_WCHAR,Wide char support) ;\
 	$(call check_glibc_feature,BR2_PROGRAM_INVOCATION,Program invocation support)
 
@@ -196,12 +188,14 @@ check_uclibc = \
 		exit -1; \
 	fi; \
 	UCLIBC_CONFIG_FILE=$${SYSROOT_DIR}/usr/include/bits/uClibc_config.h ; \
+	$(call check_uclibc_feature,__ARCH_USE_MMU__,BR2_USE_MMU,$${UCLIBC_CONFIG_FILE},MMU support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_LFS__,BR2_LARGEFILE,$${UCLIBC_CONFIG_FILE},Large file support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_IPV6__,BR2_INET_IPV6,$${UCLIBC_CONFIG_FILE},IPv6 support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_RPC__,BR2_INET_RPC,$${UCLIBC_CONFIG_FILE},RPC support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_LOCALE__,BR2_ENABLE_LOCALE,$${UCLIBC_CONFIG_FILE},Locale support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_WCHAR__,BR2_USE_WCHAR,$${UCLIBC_CONFIG_FILE},Wide char support) ;\
 	$(call check_uclibc_feature,__UCLIBC_HAS_PROGRAM_INVOCATION_NAME__,BR2_PROGRAM_INVOCATION,$${UCLIBC_CONFIG_FILE},Program invocation support) ;\
+	$(call check_uclibc_feature,__UCLIBC_HAS_THREADS__,BR2_TOOLCHAIN_HAS_THREADS,$${UCLIBC_CONFIG_FILE},Thread support)
 
 #
 # Check that the Buildroot configuration of the ABI matches the
@@ -221,7 +215,7 @@ check_arm_abi = \
 	if [ x$(BR2_ARM_EABI) = x"y" -a $${EXT_TOOLCHAIN_ABI} = "oabi" ] ; then \
 		echo "Incorrect ABI setting" ; \
 		exit 1 ; \
-	fi ; \
+	fi
 
 #
 # Check that the external toolchain supports C++
@@ -229,9 +223,9 @@ check_arm_abi = \
 check_cplusplus = \
 	$(TARGET_CXX) -v > /dev/null 2>&1 ; \
 	if test $$? -ne 0 ; then \
-		echo "BR2_INSTALL_LIBSTDCPP is selected but C++ support not available in external toolchain" ; \
+		echo "C++ support is selected but is not available in external toolchain" ; \
 		exit 1 ; \
-	fi ; \
+	fi
 
 #
 # Check that the cross-compiler given in the configuration exists
@@ -241,4 +235,4 @@ check_cross_compiler_exists = \
 	if test $$? -ne 0 ; then \
 		echo "Cannot execute cross-compiler '$(TARGET_CC)'" ; \
 		exit 1 ; \
-	fi ; \
+	fi

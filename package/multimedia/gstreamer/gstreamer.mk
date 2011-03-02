@@ -3,11 +3,10 @@
 # gstreamer
 #
 #############################################################
-GSTREAMER_VERSION = 0.10.25
+GSTREAMER_VERSION = 0.10.32
 GSTREAMER_SOURCE = gstreamer-$(GSTREAMER_VERSION).tar.bz2
 GSTREAMER_SITE = http://gstreamer.freedesktop.org/src/gstreamer
 GSTREAMER_INSTALL_STAGING = YES
-GSTREAMER_LIBTOOL_PATCH = NO
 
 # Checking if unaligned memory access works correctly cannot be done when cross
 # compiling. For the following architectures there is no information available
@@ -19,15 +18,9 @@ endif
 GSTREAMER_CONF_OPT = \
 		--disable-examples \
 		--disable-tests \
-		--disable-failing-tests
+		--disable-failing-tests \
+		--disable-loadsave
 
 GSTREAMER_DEPENDENCIES = libglib2 host-pkg-config
-
-ifeq ($(BR2_PACKAGE_GSTREAMER_LIBXML2),y)
-GSTREAMER_DEPENDENCIES += libxml2
-else
-GSTREAMER_CONF_OPT += \
-	--disable-loadsave
-endif
 
 $(eval $(call AUTOTARGETS,package/multimedia,gstreamer))

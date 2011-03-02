@@ -1,6 +1,6 @@
 #
 
-mainmenu "Buildroot2 Configuration"
+mainmenu "Buildroot $BR2_VERSION Configuration"
 
 config BR2_HAVE_DOT_CONFIG
 	bool
@@ -11,7 +11,6 @@ config BR2_VERSION
 	option env="BR2_VERSION_FULL"
 
 source "target/Config.in.arch"
-source "target/device/Config.in"
 
 menu "Build options"
 
@@ -73,26 +72,98 @@ config BR2_DL_DIR
 
 	  The default is $(TOPDIR)/dl
 
-config BR2_STAGING_DIR
-	string "Toolchain and header file location?"
-	default "$(BASE_DIR)/staging"
+config BR2_HOST_DIR
+	string "Host dir"
+	default "$(BASE_DIR)/host"
 	help
-	  This is the location where the toolchain will be installed.  The
-	  toolchain will not work if it is moved from this location.
-	  Therefore, if you wish to package up a uClibc toolchain, it is
-	  important that is is set to the final location where the toolchain
-	  will be used.
+	  Directory to store all the binary files that are built for the host.
+	  This includes the cross compilation toolchain when building the
+	  internal buildroot toolchain.
 
-	  Most people will leave this set to the default value of
-	  "$(BASE_DIR)/staging".
+	  The default is $(BASE_DIR)/host
 
-source	"target/device/Config.in.mirrors"
+menu "Mirrors and Download locations"
+
+config BR2_PRIMARY_SITE
+	string "Primary download site"
+	default ""
+	help
+	  Primary site to download from. If this option is set then buildroot
+	  will try to download package source first from this site and try the
+	  default if the file is not found.
+	  NOTE: This only works for packages using the Makefile.autotools.in
+
+config BR2_BACKUP_SITE
+	string "Backup download site"
+	default "http://sources.buildroot.net/"
+	help
+	  Backup site to download from. If this option is set then buildroot
+	  will fall back to download package sources from here if the
+	  normal location fails.
+
+config BR2_SOURCEFORGE_MIRROR
+	string "Sourceforge mirror site"
+	default "kent"
+	help
+	  Sourceforge has a system of mirror sites.  Some sites may be
+	  closer to your location, and sometimes mirror sites go down
+	  and are no longer available.  This option allows you to select
+	  your preferred Sourceforge mirror site.
+
+	  The list of mirrors is available here:
+	  http://sourceforge.net/apps/trac/sourceforge/wiki/Mirrors
+
+config BR2_KERNEL_MIRROR
+	string "Kernel.org mirror"
+	default "http://www.kernel.org/pub/"
+	help
+	  kernel.org is mirrored on a number of servers around the world.
+	  The following allows you to select your preferred mirror.
+
+	  Have a look on the kernel.org site for a list of mirrors, then enter
+	  the URL to the base directory.  Examples:
+
+	     http://www.XX.kernel.org/pub (XX = country code)
+	     http://mirror.aarnet.edu.au/pub/ftp.kernel.org
+
+config BR2_GNU_MIRROR
+	string "GNU Software mirror"
+	default "http://ftp.gnu.org/pub/gnu"
+	help
+	  GNU has multiple software mirrors scattered around the world.
+	  The following allows you to select your preferred mirror.
+
+	  Have a look on the gnu.org site for a list of mirrors, then enter
+	  the URL to the base directory.  Examples:
+
+	     http://ftp.gnu.org/pub/gnu
+	     http://mirror.aarnet.edu.au/pub/gnu
+
+config BR2_DEBIAN_MIRROR
+	string "Debian Software mirror"
+	default "http://ftp.debian.org"
+	help
+	  Debian has multiple software mirrors scattered around the world.
+	  The following allows you to select your preferred mirror.
+
+	  Usually, just add your country code like XX here:
+	  http://ftp.XX.debian.org
+
+endmenu
 
 config BR2_JLEVEL
 	int "Number of jobs to run simultaneously"
 	default "2"
 	help
 	  Number of jobs to run simultaneously
+
+config BR2_CCACHE
+	bool "Enable compiler cache"
+	help
+	  This option will enable the use of ccache, a compiler
+	  cache. It will cache the result of previous builds to speed
+	  up future builds. The cache is stored in
+	  $HOME/.buildroot-ccache.
 
 config BR2_DEPRECATED
 	bool "Show packages that are deprecated or obsolete"
@@ -148,14 +219,14 @@ choice
 
 config BR2_STRIP_strip
 	bool "strip"
-	depends on !BR2_ENABLE_DEBUG && !BR2_ELF2FLT
+	depends on !BR2_ELF2FLT
 	help
 	  strip   is the normal strip command
 
 config BR2_STRIP_sstrip
 	bool "sstrip"
 	select BR2_PACKAGE_SSTRIP_HOST
-	depends on !BR2_ENABLE_DEBUG && !BR2_ELF2FLT
+	depends on !BR2_ELF2FLT
 	help
 	  sstrip  is a strip that discards more than the normal strip
 
@@ -259,6 +330,8 @@ config BR2_HAVE_DEVFILES
 endmenu
 
 source "toolchain/Config.in"
+
+source "target/generic/Config.in"
 
 source "package/Config.in"
 

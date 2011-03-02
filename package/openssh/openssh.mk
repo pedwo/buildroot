@@ -3,12 +3,12 @@
 # openssh
 #
 #############################################################
-OPENSSH_VERSION=5.1p1
-OPENSSH_SITE=ftp://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable
 
-OPENSSH_CONF_ENV = LD="$(TARGET_CC)"
+OPENSSH_VERSION = 5.8p1
+OPENSSH_SITE = http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable
+OPENSSH_CONF_ENV = LD="$(TARGET_CC)" LDFLAGS="$(TARGET_CFLAGS)"
 OPENSSH_CONF_OPT = --libexecdir=/usr/lib --disable-lastlog --disable-utmp \
-		--disable-utmpx --disable-wtmp --disable-wtmpx --without-x
+		--disable-utmpx --disable-wtmp --disable-wtmpx --disable-strip
 
 OPENSSH_DEPENDENCIES = zlib openssl
 

@@ -4,7 +4,7 @@
 #
 #############################################################
 
-BAREBOX_VERSION:=2010.05.0
+BAREBOX_VERSION:=2011.01.0
 BAREBOX_SOURCE:=barebox-$(BAREBOX_VERSION).tar.bz2
 BAREBOX_SITE:=http://www.barebox.org/download/
 BAREBOX_DIR:=$(BUILD_DIR)/barebox-$(BAREBOX_VERSION)
@@ -19,7 +19,7 @@ else
 BAREBOX_ARCH=$(KERNEL_ARCH)
 endif
 
-BAREBOX_MAKE_FLAGS = ARCH=$(BAREBOX_ARCH) CROSS_COMPILE=$(TARGET_CROSS)
+BAREBOX_MAKE_FLAGS = ARCH=$(BAREBOX_ARCH) CROSS_COMPILE="$(CCACHE) $(TARGET_CROSS)"
 
 $(DL_DIR)/$(BAREBOX_SOURCE):
 	 $(call DOWNLOAD,$(BAREBOX_SITE),$(BAREBOX_SOURCE))
@@ -48,7 +48,14 @@ $(BAREBOX_DIR)/.installed: $(BAREBOX_DIR)/.built
 	cp $(BAREBOX_DIR)/barebox.bin $(BINARIES_DIR)
 	touch $@
 
-barebox: $(BAREBOX_DIR)/.installed
+# bareboxenv for the target
+$(TARGET_DIR)/usr/bin/bareboxenv: $(BAREBOX_DIR)/.configured
+	mkdir -p $(@D)
+	$(TARGET_CC) $(TARGET_CFLAGS) $(TARGET_LDFLAGS) -o $@ \
+		$(BAREBOX_DIR)/scripts/bareboxenv.c
+
+barebox: $(BAREBOX_DIR)/.installed \
+	$(if $(BR2_TARGET_BAREBOX_BAREBOXENV),$(TARGET_DIR)/usr/bin/bareboxenv)
 
 ifeq ($(BR2_TARGET_BAREBOX),y)
 TARGETS+=barebox

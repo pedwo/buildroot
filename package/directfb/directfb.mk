@@ -3,15 +3,12 @@
 # directfb
 #
 #############################################################
-DIRECTFB_VERSION_MAJOR:=1.4
-DIRECTFB_VERSION:=$(DIRECTFB_VERSION_MAJOR).10
-DIRECTFB_SITE:=http://www.directfb.org/downloads/Core/DirectFB-$(DIRECTFB_VERSION_MAJOR)
-DIRECTFB_SOURCE:=DirectFB-$(DIRECTFB_VERSION).tar.gz
+DIRECTFB_VERSION_MAJOR = 1.4
+DIRECTFB_VERSION = $(DIRECTFB_VERSION_MAJOR).11
+DIRECTFB_SITE = http://www.directfb.org/downloads/Core/DirectFB-$(DIRECTFB_VERSION_MAJOR)
+DIRECTFB_SOURCE = DirectFB-$(DIRECTFB_VERSION).tar.gz
 DIRECTFB_AUTORECONF = YES
-DIRECTFB_LIBTOOL_PATCH = NO
 DIRECTFB_INSTALL_STAGING = YES
-DIRECTFB_INSTALL_TARGET = YES
-
 DIRECTFB_CONF_OPT = \
 	--localstatedir=/var \
 	--enable-static \
@@ -64,7 +61,8 @@ DIRECTFB_GFX := \
 	$(if $(BR2_PACKAGE_DIRECTFB_PXA3XX),pxa3xx) \
 	$(if $(BR2_PACKAGE_DIRECTFB_SH772X),sh772x) \
 	$(if $(BR2_PACKAGE_DIRECTFB_UNICHROME),unichrome) \
-	$(if $(BR2_PACKAGE_DIRECTFB_I830),i830)
+	$(if $(BR2_PACKAGE_DIRECTFB_I830),i830)	\
+	$(if $(BR2_PACKAGE_DIRECTFB_EP9X),ep9x)
 
 ifeq ($(BR2_PACKAGE_DIRECTFB_SH772X),y)
 DIRECTFB_DEPENDENCIES += shbeu shjpeg uiomux
@@ -143,6 +141,14 @@ HOST_DIRECTFB_BUILD_CMDS = \
 
 HOST_DIRECTFB_INSTALL_CMDS = \
 	$(INSTALL) -m 0755 $(@D)/tools/directfb-csource $(HOST_DIR)/usr/bin
+
+define DIRECTFB_STAGING_CONFIG_FIXUP
+	$(SED) "s,^prefix=.*,prefix=\'$(STAGING_DIR)/usr\',g" \
+		-e "s,^exec_prefix=.*,exec_prefix=\'$(STAGING_DIR)/usr\',g" \
+		$(STAGING_DIR)/usr/bin/directfb-config
+endef
+
+DIRECTFB_POST_INSTALL_STAGING_HOOKS += DIRECTFB_STAGING_CONFIG_FIXUP
 
 $(eval $(call AUTOTARGETS,package,directfb))
 $(eval $(call AUTOTARGETS,package,directfb,host))

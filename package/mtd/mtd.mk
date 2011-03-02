@@ -3,7 +3,7 @@
 # mtd provides jffs2 utilities
 #
 #############################################################
-MTD_VERSION:=1.4.1
+MTD_VERSION:=1.4.2
 MTD_SOURCE:=mtd-utils-$(MTD_VERSION).tar.bz2
 MTD_SITE:=ftp://ftp.infradead.org/pub/mtd-utils
 ifeq ($(BR2_PACKAGE_MTD_MKFSJFFS2),y)
@@ -68,14 +68,12 @@ MTD_MAKE_COMMON_FLAGS = \
 	$(TARGET_CONFIGURE_OPTS) CROSS=$(TARGET_CROSS) \
 	WITHOUT_XATTR=1 WITHOUT_LARGEFILE=1
 
-ifneq ($(MTD_TARGETS_y),)
 define MTD_TARGETS_BUILD
 	$(MAKE1) $(MTD_MAKE_COMMON_FLAGS) \
 		BUILDDIR=$(@D) \
 		-C $(@D) \
-		$(addprefix $(@D)/, $(MTD_TARGETS_y))
+		$(addprefix $(@D)/, lib/libmtd.a $(MTD_TARGETS_y))
 endef
-endif
 
 ifneq ($(MTD_TARGETS_UBI_y),)
 define MTD_TARGETS_UBI_BUILD

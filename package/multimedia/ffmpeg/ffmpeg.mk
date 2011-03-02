@@ -111,10 +111,10 @@ else
 FFMPEG_CONF_OPT += --disable-outdevs
 endif
 
-ifeq ($(BR2_PTHREADS_NONE),y)
-FFMPEG_CONF_OPT += --disable-pthreads
-else
+ifeq ($(BR2_TOOLCHAIN_HAS_THREADS),y)
 FFMPEG_CONF_OPT += --enable-pthreads
+else
+FFMPEG_CONF_OPT += --disable-pthreads
 endif
 
 ifeq ($(BR2_PACKAGE_ZLIB),y)
@@ -122,6 +122,11 @@ FFMPEG_CONF_OPT += --enable-zlib
 FFMPEG_DEPENDENCIES += zlib
 else
 FFMPEG_CONF_OPT += --disable-zlib
+endif
+
+# MMX on is default for x86, disable it for lowly x86-type processors
+ifeq ($(BR2_x86_i386)$(BR2_x86_i486)$(BR2_x86_i586)$(BR2_x86_i686)$(BR2_x86_pentiumpro)$(BR2_x86_geode),y)
+FFMPEG_CONF_OPT += --disable-mmx
 endif
 
 FFMPEG_CONF_OPT += $(call qstrip,$(BR2_PACKAGE_FFMPEG_EXTRACONF))
@@ -136,7 +141,7 @@ define FFMPEG_CONFIGURE_CMDS
 		--enable-cross-compile	\
 		--cross-prefix=$(TARGET_CROSS) \
 		--sysroot=$(STAGING_DIR) \
-		--host-cc=$(HOSTCC) \
+		--host-cc="$(HOSTCC)" \
 		--arch=$(BR2_ARCH) \
 		--extra-cflags=-fPIC \
 		$(DISABLE_IPV6) \

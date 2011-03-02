@@ -12,21 +12,21 @@ config BR2_TARGET_UBOOT_BOARDNAME
 
 choice
 	prompt "U-Boot Version"
-	default BR2_TARGET_UBOOT_2010_06
+	default BR2_TARGET_UBOOT_2010_12
 	help
 	  Select the specific U-Boot version you want to use
+
+config BR2_TARGET_UBOOT_2010_12
+	bool "2010.12"
+
+config BR2_TARGET_UBOOT_2010_09
+	bool "2010.09"
 
 config BR2_TARGET_UBOOT_2010_06
 	bool "2010.06"
 
 config BR2_TARGET_UBOOT_2010_03
 	bool "2010.03"
-
-config BR2_TARGET_UBOOT_2009_11
-	bool "2009.11"
-
-config BR2_TARGET_UBOOT_2009_08
-	bool "2009.08"
 
 config BR2_TARGET_UBOOT_CUSTOM_TARBALL
 	bool "Custom tarball"
@@ -42,10 +42,10 @@ endif
 
 config BR2_TARGET_UBOOT_VERSION
 	string
+	default "2010.12"	if BR2_TARGET_UBOOT_2010_12
+	default "2010.09"	if BR2_TARGET_UBOOT_2010_09
 	default "2010.06"	if BR2_TARGET_UBOOT_2010_06
 	default "2010.03"	if BR2_TARGET_UBOOT_2010_03
-	default "2009.11"	if BR2_TARGET_UBOOT_2009_11
-	default "2009.08"	if BR2_TARGET_UBOOT_2009_08
 	default "custom"	if BR2_TARGET_UBOOT_CUSTOM_TARBALL
 
 config BR2_TARGET_UBOOT_CUSTOM_PATCH_DIR
@@ -66,6 +66,10 @@ config BR2_TARGET_UBOOT_FORMAT_BIN
 config BR2_TARGET_UBOOT_FORMAT_KWB
 	depends on BR2_arm
 	bool "u-boot.kwb (Marvell)"
+
+config BR2_TARGET_UBOOT_FORMAT_LDR
+	depends on BR2_bfin
+	bool "u-boot.ldr"
 
 endchoice
 

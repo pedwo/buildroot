@@ -9,6 +9,32 @@ HOSTMAKE :=$(shell which $(HOSTMAKE) || type -p $(HOSTMAKE) || echo make)
 MAKE1:=$(HOSTMAKE) -j1
 MAKE:=$(HOSTMAKE) -j$(BR2_JLEVEL)
 
+# Compute GNU_TARGET_NAME and REAL_GNU_TARGET_NAME
+GNU_TARGET_NAME=$(ARCH)-linux
+
+ifeq ($(BR2_TOOLCHAIN_BUILDROOT)$(BR2_TOOLCHAIN_CTNG_uClibc)$(BR2_TOOLCHAIN_EXTERNAL_UCLIBC),y)
+LIBC=uclibc
+else
+LIBC=gnu
+endif
+
+# The ABI suffix is a bit special on ARM, as it needs to be
+# -uclibcgnueabi for uClibc EABI, -uclibc for uClibc OABI, -gnueabi
+# for glibc EABI and -gnu for glibc OABI. This means that the LIBC and
+# ABI aren't strictly orthogonal, which explains why we need the test
+# on LIBC below.
+ifeq ($(BR2_ARM_EABI),y)
+ifeq ($(LIBC),uclibc)
+ABI=gnueabi
+else
+ABI=eabi
+endif
+endif
+
+REAL_GNU_TARGET_NAME=$(ARCH)-unknown-linux-$(LIBC)$(ABI)
+
+STAGING_DIR=$(HOST_DIR)/usr/$(REAL_GNU_TARGET_NAME)/sysroot
+
 ifeq ($(BR2_OPTIMIZE_0),y)
 TARGET_OPTIMIZATION+=-O0
 endif
@@ -64,11 +90,6 @@ ifeq ($(BR2_VFP_FLOAT),y)
 TARGET_CFLAGS+=-mfpu=vfp
 endif
 
-# enable VIS for v9a and v9b
-ifeq ($(findstring y,$(BR2_sparc_v9a)$(BR2_sparc64_v9a)$(BR2_sparc_v9b)$(BR2_sparc64_v9b)),y)
-TARGET_CFLAGS+=-mvis
-endif
-
 ifeq ($(findstring yy,$(BR2_mips)$(BR2_MIPS_ABI64)),yy)
 TARGET_CFLAGS+=-fno-pic -mno-abicalls
 endif
@@ -85,44 +106,16 @@ TARGET_LDFLAGS+=-L$(STAGING_DIR)/lib -L$(STAGING_DIR)/usr/lib
 TARGET_CXXFLAGS=$(TARGET_CFLAGS)
 TARGET_SYSROOT_OPT=--sysroot=$(STAGING_DIR)
 
-# Compute GNU_TARGET_NAME and REAL_GNU_TARGET_NAME
-GNU_TARGET_NAME=$(ARCH)-linux
-
-ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
-LIBC=uclibc
-else ifeq ($(BR2_TOOLCHAIN_EXTERNAL_UCLIBC),y)
-LIBC=uclibc
-else
-LIBC=gnu
-endif
-
-# The ABI suffix is a bit special on ARM, as it needs to be
-# -uclibcgnueabi for uClibc EABI, -uclibc for uClibc OABI, -gnueabi
-# for glibc EABI and -gnu for glibc OABI. This means that the LIBC and
-# ABI aren't strictly orthogonal, which explains why we need the test
-# on LIBC below.
-ifeq ($(BR2_ARM_EABI),y)
-ifeq ($(LIBC),uclibc)
-ABI=gnueabi
-else
-ABI=eabi
-endif
-endif
-
-REAL_GNU_TARGET_NAME=$(ARCH)-unknown-linux-$(LIBC)$(ABI)
-
-ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
-TARGET_CROSS=$(STAGING_DIR)/usr/bin/$(REAL_GNU_TARGET_NAME)-
+ifeq ($(BR2_TOOLCHAIN_BUILDROOT)$(BR2_TOOLCHAIN_CTNG),y)
+TARGET_CROSS=$(HOST_DIR)/usr/bin/$(REAL_GNU_TARGET_NAME)-
 else ifeq ($(BR2_TOOLCHAIN_EXTERNAL),y)
-TOOLCHAIN_EXTERNAL_PREFIX:=$(call qstrip,$(BR2_TOOLCHAIN_EXTERNAL_PREFIX))
-TOOLCHAIN_EXTERNAL_PATH:=$(call qstrip,$(BR2_TOOLCHAIN_EXTERNAL_PATH))
-ifneq ($(TOOLCHAIN_EXTERNAL_PATH),)
-TARGET_CROSS=$(TOOLCHAIN_EXTERNAL_PATH)/bin/$(TOOLCHAIN_EXTERNAL_PREFIX)-
+TOOLCHAIN_EXTERNAL_PREFIX=$(call qstrip,$(BR2_TOOLCHAIN_EXTERNAL_PREFIX))
+ifeq ($(BR2_TOOLCHAIN_EXTERNAL_DOWNLOAD),y)
+TOOLCHAIN_EXTERNAL_LOCATION=$(TOOLCHAIN_EXTERNAL_DIR)
 else
-TARGET_CROSS=$(TOOLCHAIN_EXTERNAL_PREFIX)-
+TOOLCHAIN_EXTERNAL_LOCATION=$(call qstrip,$(BR2_TOOLCHAIN_EXTERNAL_PATH))
 endif
-else ifeq ($(BR2_TOOLCHAIN_CTNG),y)
-TARGET_CROSS=$(TOOLCHAIN_DIR)/bin/$(REAL_GNU_TARGET_NAME)-
+TARGET_CROSS=$(TOOLCHAIN_EXTERNAL_LOCATION)/bin/$(TOOLCHAIN_EXTERNAL_PREFIX)-
 endif
 
 # Quotes are needed for spaces et al in path components.
@@ -142,27 +135,42 @@ TARGET_RANLIB   = $(TARGET_CROSS)ranlib
 TARGET_OBJCOPY  = $(TARGET_CROSS)objcopy
 TARGET_OBJDUMP  = $(TARGET_CROSS)objdump
 
+TARGET_CC_NOCCACHE  := $(TARGET_CC)
+TARGET_CXX_NOCCACHE := $(TARGET_CXX)
+
+ifeq ($(BR2_CCACHE),y)
+TARGET_CC  := $(CCACHE) $(TARGET_CC)
+TARGET_CXX := $(CCACHE) $(TARGET_CXX)
+endif
+
+# * CMake doesn't support having the --sysroot option directly in the
+#   compiler path, so move this option to CFLAGS/CXXFLAGS variables.
+# * Don't use ccache because then CMake will fail to detect compiler.
+CMAKE_TARGET_CC = $(filter-out --sysroot=%,$(TARGET_CC_NOCCACHE))
+CMAKE_TARGET_CXX = $(filter-out --sysroot=%,$(TARGET_CXX_NOCCACHE))
+CMAKE_TARGET_CFLAGS = $(filter --sysroot=%,$(TARGET_CC_NOCCACHE)) $(TARGET_CFLAGS)
+CMAKE_TARGET_CXXFLAGS = $(filter --sysroot=%,$(TARGET_CXX_NOCCACHE)) $(TARGET_CXXFLAGS)
+
 ifeq ($(BR2_STRIP_strip),y)
 STRIP_DISCARD_ALL:=--discard-all
 STRIP_STRIP_UNNEEDED:=--strip-unneeded
 STRIP_STRIP_ALL:=--strip-all
-REMOVE_SECTION_COMMENT:=--remove-section=.comment
-REMOVE_SECTION_NOTE:=--remove-section=.note
 TARGET_STRIP=$(TARGET_CROSS)strip
-STRIPCMD=$(TARGET_CROSS)strip $(REMOVE_SECTION_COMMENT) $(REMOVE_SECTION_NOTE)
+STRIPCMD=$(TARGET_CROSS)strip --remove-section=.comment --remove-section=.note
+KSTRIPCMD=$(STRIPCMD) $(STRIP_STRIP_UNNEEDED)
 endif
 ifeq ($(BR2_STRIP_sstrip),y)
 STRIP_DISCARD_ALL:=
 STRIP_STRIP_UNNEEDED:=
 STRIP_STRIP_ALL:=
-REMOVE_SECTION_COMMENT:=
-REMOVE_SECTION_NOTE:=
-TARGET_STRIP=$(STAGING_DIR)/usr/bin/$(REAL_GNU_TARGET_NAME)-sstrip
+TARGET_STRIP=$(HOST_DIR)/usr/bin/$(REAL_GNU_TARGET_NAME)-sstrip
 STRIPCMD=$(TARGET_STRIP)
+KSTRIPCMD=$(TARGET_CROSS)strip --remove-section=.comment --remove-section=.note --strip-unneeded
 endif
 ifeq ($(BR2_STRIP_none),y)
 TARGET_STRIP=true
 STRIPCMD=$(TARGET_STRIP)
+KSTRIPCMD=$(TARGET_STRIP)
 endif
 INSTALL:=$(shell which install || type -p install)
 FLEX:=$(shell which flex || type -p flex)
@@ -176,7 +184,7 @@ HOST_LDFLAGS  += -L$(HOST_DIR)/lib -L$(HOST_DIR)/usr/lib -Wl,-rpath,$(HOST_DIR)/
 HOST_PATH=$(HOST_DIR)/bin:$(HOST_DIR)/usr/bin:$(PATH)
 
 # hostcc version as an integer - E.G. 4.3.2 => 432
-HOSTCC_VERSION:=$(shell $(HOSTCC) --version | \
+HOSTCC_VERSION:=$(shell $(HOSTCC_NOCCACHE) --version | \
 	sed -n 's/^.* \([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)[ ]*.*$$/\1\2\3/p')
 
 TARGET_CONFIGURE_OPTS=PATH=$(TARGET_PATH) \
@@ -192,6 +200,7 @@ TARGET_CONFIGURE_OPTS=PATH=$(TARGET_PATH) \
 		RANLIB="$(TARGET_RANLIB)" \
 		STRIP="$(TARGET_STRIP)" \
 		OBJCOPY="$(TARGET_OBJCOPY)" \
+		OBJDUMP="$(TARGET_OBJDUMP)" \
 		AR_FOR_BUILD="$(HOSTAR)" \
 		AS_FOR_BUILD="$(HOSTAS)" \
 		CC_FOR_BUILD="$(HOSTCC)" \
@@ -209,9 +218,7 @@ TARGET_CONFIGURE_OPTS=PATH=$(TARGET_PATH) \
 		CXXFLAGS="$(TARGET_CXXFLAGS)" \
 		LDFLAGS="$(TARGET_LDFLAGS)" \
 		FCFLAGS="$(TARGET_FCFLAGS)" \
-		PKG_CONFIG_SYSROOT_DIR="$(STAGING_DIR)" \
 		PKG_CONFIG="$(PKG_CONFIG_HOST_BINARY)" \
-		PKG_CONFIG_PATH="$(STAGING_DIR)/usr/lib/pkgconfig:$(PKG_CONFIG_PATH)" \
 		PERLLIB="$(HOST_DIR)/usr/lib/perl" \
 		STAGING_DIR="$(STAGING_DIR)"
 
@@ -233,6 +240,7 @@ HOST_CONFIGURE_OPTS=PATH=$(HOST_PATH) \
 		PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 \
 		PKG_CONFIG_ALLOW_SYSTEM_LIBS=1 \
 		PKG_CONFIG="$(PKG_CONFIG_HOST_BINARY)" \
+		PKG_CONFIG_SYSROOT_DIR="/" \
 		PKG_CONFIG_LIBDIR="$(HOST_DIR)/usr/lib/pkgconfig" \
 		PERLLIB="$(HOST_DIR)/usr/lib/perl" \
 		LD_LIBRARY_PATH="$(HOST_DIR)/usr/lib:$(LD_LIBRARY_PATH)"
@@ -299,7 +307,7 @@ ifneq ($(BR2_INET_IPV6),y)
 DISABLE_IPV6= --disable-ipv6
 endif
 
-ifneq ($(BR2_GCC_CROSS_CXX),y)
+ifneq ($(BR2_INSTALL_LIBSTDCPP),y)
 TARGET_CONFIGURE_OPTS+=CXX=false
 endif
 
@@ -310,4 +318,5 @@ ENABLE_DEBUG:=
 endif
 
 include package/Makefile.autotools.in
+include package/Makefile.cmake.in
 include package/Makefile.package.in

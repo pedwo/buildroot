@@ -3,7 +3,7 @@
 # pkgconfig
 #
 #############################################################
-PKG_CONFIG_VERSION = 0.23
+PKG_CONFIG_VERSION = 0.25
 PKG_CONFIG_SOURCE = pkg-config-$(PKG_CONFIG_VERSION).tar.gz
 PKG_CONFIG_SITE = http://pkgconfig.freedesktop.org/releases/
 
@@ -13,14 +13,10 @@ PKG_CONFIG_CONF_OPT = --with-installed-glib
 
 HOST_PKG_CONFIG_CONF_OPT = \
 		--with-pc-path="$(STAGING_DIR)/usr/lib/pkgconfig" \
+		--with-sysroot="$(STAGING_DIR)" \
 		--disable-static
 
-define HOST_PKG_CONFIG_INSTALL_M4
-install -D -m 0644 $(HOST_DIR)/usr/share/aclocal/pkg.m4 \
-		$(STAGING_DIR)/usr/share/aclocal/pkg.m4
-endef
-
-HOST_PKG_CONFIG_POST_INSTALL_HOOKS += HOST_PKG_CONFIG_INSTALL_M4
+HOST_PKG_CONFIG_AUTORECONF = YES
 
 $(eval $(call AUTOTARGETS,package,pkg-config))
 $(eval $(call AUTOTARGETS,package,pkg-config,host))

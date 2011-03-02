@@ -3,10 +3,9 @@
 # gst-plugins-good
 #
 #############################################################
-GST_PLUGINS_GOOD_VERSION = 0.10.16
+GST_PLUGINS_GOOD_VERSION = 0.10.27
 GST_PLUGINS_GOOD_SOURCE = gst-plugins-good-$(GST_PLUGINS_GOOD_VERSION).tar.bz2
 GST_PLUGINS_GOOD_SITE = http://gstreamer.freedesktop.org/src/gst-plugins-good
-GST_PLUGINS_GOOD_LIBTOOL_PATCH = NO
 
 GST_PLUGINS_GOOD_CONF_OPT = \
 		--disable-debug \
@@ -300,6 +299,13 @@ GST_PLUGINS_GOOD_CONF_OPT += --enable-annodex
 GST_PLUGINS_GOOD_DEPENDENCIES += libxml2
 else
 GST_PLUGINS_GOOD_CONF_OPT += --disable-annodex
+endif
+
+ifeq ($(BR2_PACKAGE_GST_PLUGINS_GOOD_PLUGIN_CAIRO),y)
+GST_PLUGINS_GOOD_CONF_OPT += --enable-cairo
+GST_PLUGINS_GOOD_DEPENDENCIES += cairo
+else
+GST_PLUGINS_GOOD_CONF_OPT += --disable-cairo
 endif
 
 ifeq ($(BR2_PACKAGE_GST_PLUGINS_GOOD_PLUGIN_FLAC),y)

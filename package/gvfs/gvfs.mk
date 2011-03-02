@@ -3,8 +3,8 @@
 # gvfs
 #
 #############################################################
-GVFS_VERSION_MAJOR = 1.4
-GVFS_VERSION_MINOR = 0
+GVFS_VERSION_MAJOR = 1.6
+GVFS_VERSION_MINOR = 6
 GVFS_VERSION = $(GVFS_VERSION_MAJOR).$(GVFS_VERSION_MINOR)
 GVFS_SOURCE = gvfs-$(GVFS_VERSION).tar.gz
 GVFS_SITE = http://ftp.gnome.org/pub/GNOME/sources/gvfs/$(GVFS_VERSION_MAJOR)
@@ -12,7 +12,6 @@ GVFS_INSTALL_STAGING = NO
 GVFS_INSTALL_TARGET = YES
 GVFS_AUTORECONF = NO
 GVFS_DEPENDENCIES = host-pkg-config host-libglib2 libglib2 dbus-glib shared-mime-info
-GVFS_LIBTOOL_PATCH = NO
 
 GVFS_CONF_OPT = \
 	--disable-gconf			\

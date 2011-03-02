@@ -14,6 +14,8 @@ config BR2_armeb
 config BR2_avr32
 	bool "avr32"
 	select BR2_SOFT_FLOAT
+config BR2_bfin
+	bool "bfin"
 config BR2_i386
 	bool "i386"
 config BR2_m68k
@@ -125,6 +127,20 @@ config BR2_ARM_EABI
 	bool "EABI"
 config BR2_ARM_OABI
 	bool "OABI"
+endchoice
+
+choice
+	prompt "Target ABI"
+	depends on BR2_bfin
+	default BR2_BFIN_FLAT
+config BR2_BFIN_FDPIC
+	bool "FDPIC"
+config BR2_BFIN_FLAT
+	bool "FLAT"
+config BR2_BFIN_FLAT_SEP_DATA
+	bool "FLAT (Separate data)"
+config BR2_BFIN_SHARED_FLAT
+	bool "Shared FLAT"
 endchoice
 
 choice
@@ -263,11 +279,13 @@ config BR2_x86_barcelona
 config BR2_x86_geode
 	bool "geode"
 config BR2_x86_c3
-	bool "cyrix 3 (MMX + 3dNOW!)"
+	bool "Via/Cyrix C3 (Samuel/Ezra cores)"
+config BR2_x86_c32
+	bool "Via C3-2 (Nehemiah cores)"
 config BR2_x86_winchip_c6
-	bool "IDT winchip C6 (i486 + slow MMX)"
+	bool "IDT Winchip C6"
 config BR2_x86_winchip2
-	bool "IDT winchip2 (i486 +MMX +SSE)"
+	bool "IDT Winchip 2"
 endchoice
 
 choice
@@ -304,6 +322,15 @@ config BR2_sparc_cypress
 	bool "cypress"
 config BR2_sparc_v8
 	bool "v8"
+comment "LEON SPARC needs gcc = 4.4.x"
+config BR2_sparc_sparchfleon
+	bool "hfleon"
+config BR2_sparc_sparchfleonv8
+	bool "hfleonv8"
+config BR2_sparc_sparcsfleon
+	bool "sfleon"
+config BR2_sparc_sparcsfleonv8
+	bool "sfleonv8"
 config BR2_sparc_supersparc
 	bool "supersparc"
 config BR2_sparc_sparclite
@@ -320,19 +347,12 @@ config BR2_sparc_sparclet
 	bool "sparclet"
 config BR2_sparc_tsc701
 	bool "tsc701"
-config BR2_sparc_v9
-	bool "v9"
-config BR2_sparc_v9a
-	bool "v9a"
-config BR2_sparc_v9b
-	bool "v9b"
-config BR2_sparc_ultrasparc
-	bool "ultrasparc"
-config BR2_sparc_ultrasparc3
-	bool "ultrasparc3"
-config BR2_sparc_niagara
-	bool "niagara"
 endchoice
+
+config BR2_SPARC_TYPE
+	string
+	default V7	if BR2_sparc_v7 || BR2_sparc_cypress || BR2_sparc_sparclite || BR2_sparc_f930 || BR2_sparc_f934 || BR2_sparc_sparclite86x || BR2_sparc_sparclet || BR2_sparc_tsc701 || BR2_sparc_sparchfleon || BR2_sparc_sparcsfleon
+	default V8	if BR2_sparc_v8 || BR2_sparc_supersparc || BR2_sparc_hypersparc || BR2_sparc_sparchfleonv8 || BR2_sparc_sparcsfleonv8
 
 choice
 	prompt "Target Architecture Variant"
@@ -440,11 +460,16 @@ config BR2_ARCH
 	default "arm"		if BR2_arm
 	default "armeb"		if BR2_armeb
 	default "avr32"		if BR2_avr32
+	default "bfin"		if BR2_bfin
 	default "i386"		if BR2_x86_i386
 	default "i486"		if BR2_x86_i486
 	default "i586"		if BR2_x86_i586
 	default "i586"		if BR2_x86_pentium_mmx
 	default "i586"		if BR2_x86_geode
+	default "i586"		if BR2_x86_c3
+	default "i686"		if BR2_x86_c32
+	default "i586"		if BR2_x86_winchip_c6
+	default "i586"		if BR2_x86_winchip2
 	default "i686"		if BR2_x86_i686
 	default "i686"		if BR2_x86_pentium2
 	default "i686"		if BR2_x86_pentium3
@@ -477,7 +502,7 @@ config BR2_ARCH
 
 config BR2_ENDIAN
 	string
-	default "LITTLE" if BR2_arm || BR2_i386 || BR2_mipsel || \
+	default "LITTLE" if BR2_arm || BR2_bfin || BR2_i386 || BR2_mipsel || \
 			    BR2_sh3 || BR2_sh4 || BR2_x86_64 || BR2_sh64
 	default "BIG"    if BR2_armeb || BR2_avr32 || BR2_m68k || BR2_mips || \
 			    BR2_powerpc || BR2_sh2a_nofpueb || BR2_sh2eb || \
@@ -508,6 +533,7 @@ config BR2_GCC_TARGET_TUNE
 	default winchip-c6	if BR2_x86_winchip_c6
 	default winchip2	if BR2_x86_winchip2
 	default c3		if BR2_x86_c3
+	default c3-2		if BR2_x86_c32
 	default geode		if BR2_x86_geode
 	default generic		if BR2_x86_64_generic
 	default nocona		if BR2_x86_64_nocona
@@ -621,6 +647,7 @@ config BR2_GCC_TARGET_ARCH
 	default winchip-c6	if BR2_x86_winchip_c6
 	default winchip2	if BR2_x86_winchip2
 	default c3		if BR2_x86_c3
+	default c3-2		if BR2_x86_c32
 	default geode		if BR2_x86_geode
 	default armv4t		if BR2_arm7tdmi
 	default armv3		if BR2_arm610
@@ -666,3 +693,9 @@ config BR2_GCC_TARGET_ABI
 	default ibmlongdouble	if BR2_powerpc && BR2_PPC_ABI_ibmlongdouble
 	default ieeelongdouble	if BR2_powerpc && BR2_PPC_ABI_ieeelongdouble
 
+config BR2_GCC_TARGET_CPU
+	string
+	default sparchfleon	if BR2_sparc_sparchfleon
+	default sparchfleonv8	if BR2_sparc_sparchfleonv8
+	default sparcsfleon	if BR2_sparc_sparcsfleon
+	default sparcsfleonv8	if BR2_sparc_sparcsfleonv8

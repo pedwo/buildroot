@@ -1,6 +1,5 @@
 config BR2_TARGET_ROOTFS_EXT2
 	bool "ext2 root filesystem"
-	default y
 	help
 	  Build an ext2 root filesystem
 
@@ -18,11 +17,6 @@ config BR2_TARGET_ROOTFS_EXT2_RESBLKS
 	int "reserved blocks percentage"
 	depends on BR2_TARGET_ROOTFS_EXT2
 	default 0
-
-config BR2_TARGET_ROOTFS_EXT2_SQUASH
-	bool "Make all files be owned by root"
-	depends on  BR2_TARGET_ROOTFS_EXT2
-	default y
 
 choice
 	prompt "Compression method"

@@ -12,7 +12,7 @@
 #
 ######################################################################
 
-QT_VERSION:=4.7.0
+QT_VERSION:=4.7.1
 QT_SOURCE:=qt-everywhere-opensource-src-$(QT_VERSION).tar.gz
 QT_SITE:=http://get.qt.nokia.com/qt/source
 QT_CAT:=$(ZCAT)
@@ -154,6 +154,9 @@ QT_CONFIGURE += -qt-mouse-qvfb
 else
 QT_CONFIGURE += -no-mouse-qvfb
 endif
+ifeq ($(BR2_PACKAGE_QT_MOUSE_NO_QWS_CURSOR),y)
+QT_CONFIGURE+= -D QT_NO_QWS_CURSOR
+endif
 
 ### Keyboard drivers
 ifeq ($(BR2_PACKAGE_QT_KEYBOARD_TTY),y)
@@ -188,6 +191,10 @@ ifeq ($(BR2_ENDIAN),"LITTLE")
 QT_CONFIGURE+= -little-endian
 else
 QT_CONFIGURE+= -big-endian
+endif
+
+ifneq ($(BR2_PACKAGE_QT_GUI_MODULE),y)
+QT_CONFIGURE+= -no-gui
 endif
 
 ifeq ($(BR2_PACKAGE_QT_GIF),y)
@@ -279,8 +286,7 @@ ifeq ($(BR2_PACKAGE_QT_IBASE),y)
 QT_CONFIGURE+= -qt-sql-ibase
 endif
 ifeq ($(BR2_PACKAGE_QT_MYSQL),y)
-QT_CONFIGURE+= -qt-sql-mysql -I $(STAGING_DIR)/usr/include/mysql -L $(STAGING_DIR)/usr/lib/mysql
-
+QT_CONFIGURE+= -qt-sql-mysql -mysql_config $(STAGING_DIR)/usr/bin/mysql_config
 QT_DEP_LIBS+=mysql_client
 endif
 ifeq ($(BR2_PACKAGE_QT_ODBC),y)
@@ -435,7 +441,7 @@ endif
 QT_QMAKE_CONF:=$(QT_TARGET_DIR)/mkspecs/qws/linux-$(BR2_PACKAGE_QT_EMB_PLATFORM)-g++/qmake.conf
 
 # Variable for other Qt applications to use
-QT_QMAKE:=$(STAGING_DIR)/usr/bin/qmake -spec qws/linux-$(BR2_PACKAGE_QT_EMB_PLATFORM)-g++
+QT_QMAKE:=$(HOST_DIR)/usr/bin/qmake -spec qws/linux-$(BR2_PACKAGE_QT_EMB_PLATFORM)-g++
 
 ################################################################################
 # QT_QMAKE_SET -- helper macro to set QMAKE_<variable> = <value> in
@@ -533,8 +539,24 @@ $(QT_TARGET_DIR)/.compiled: $(QT_TARGET_DIR)/.configured
 	$(MAKE) -C $(QT_TARGET_DIR)
 	touch $@
 
-$(STAGING_DIR)/usr/lib/libQtCore.la: $(QT_TARGET_DIR)/.compiled
+$(HOST_DIR)/usr/bin/qt.conf:
+	mkdir -p $(dir $@)
+	echo "[Paths]" > $@
+	echo "Prefix=$(HOST_DIR)/usr" >> $@
+	echo "Headers=$(STAGING_DIR)/usr/include" >> $@
+	echo "Libraries=$(STAGING_DIR)/usr/lib" >> $@
+	echo "Data=$(HOST_DIR)/usr" >> $@
+	echo "Binaries=$(HOST_DIR)/usr/bin" >> $@
+
+$(STAGING_DIR)/usr/lib/libQtCore.la: $(QT_TARGET_DIR)/.compiled $(HOST_DIR)/usr/bin/qt.conf
 	$(MAKE) -C $(QT_TARGET_DIR) install
+	# Move host programs and spec files to the host directory. The
+	# generated qt.conf file will tell qmake where everything is.
+	mv $(addprefix $(STAGING_DIR)/usr/bin/,moc rcc qmake lrelease) $(HOST_DIR)/usr/bin
+ifeq ($(BR2_PACKAGE_QT_GUI_MODULE),y)
+	mv $(STAGING_DIR)/usr/bin/uic $(HOST_DIR)/usr/bin
+endif
+	mv $(STAGING_DIR)/usr/mkspecs $(HOST_DIR)/usr
 
 qt-gui: $(STAGING_DIR)/usr/lib/libQtCore.la
 	mkdir -p $(TARGET_DIR)/usr/lib/fonts

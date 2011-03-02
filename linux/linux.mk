@@ -23,8 +23,7 @@ LINUX26_MAKE_FLAGS = \
 	HOSTCFLAGS="$(HOSTCFLAGS)" \
 	ARCH=$(KERNEL_ARCH) \
 	INSTALL_MOD_PATH=$(TARGET_DIR) \
-	CROSS_COMPILE=$(TARGET_CROSS) \
-	LDFLAGS="$(TARGET_LDFLAGS)" \
+	CROSS_COMPILE="$(CCACHE) $(TARGET_CROSS)" \
 	LZMA="$(LZMA)"
 
 # Get the real Linux version, which tells us where kernel modules are
@@ -32,7 +31,12 @@ LINUX26_MAKE_FLAGS = \
 LINUX26_VERSION_PROBED = $(shell $(MAKE) $(LINUX26_MAKE_FLAGS) -C $(LINUX26_DIR) --no-print-directory -s kernelrelease)
 
 ifeq ($(BR2_LINUX_KERNEL_UIMAGE),y)
+ifeq ($(KERNEL_ARCH),blackfin)
+# a uImage, but with a different file name
+LINUX26_IMAGE_NAME=vmImage
+else
 LINUX26_IMAGE_NAME=uImage
+endif
 LINUX26_DEPENDENCIES+=$(MKIMAGE)
 else ifeq ($(BR2_LINUX_KERNEL_BZIMAGE),y)
 LINUX26_IMAGE_NAME=bzImage
@@ -40,21 +44,38 @@ else ifeq ($(BR2_LINUX_KERNEL_ZIMAGE),y)
 LINUX26_IMAGE_NAME=zImage
 else ifeq ($(BR2_LINUX_KERNEL_VMLINUX_BIN),y)
 LINUX26_IMAGE_NAME=vmlinux.bin
+else ifeq ($(BR2_LINUX_KERNEL_VMLINUX),y)
+LINUX26_IMAGE_NAME=vmlinux
 endif
 
-ifeq ($(KERNEL_ARCH),avr32)
-LINUX26_IMAGE_PATH=$(LINUX26_DIR)/arch/$(KERNEL_ARCH)/boot/images/$(LINUX26_IMAGE_NAME)
+# Compute the arch path, since i386 and x86_64 are in arch/x86 and not
+# in arch/$(KERNEL_ARCH). Even if the kernel creates symbolic links
+# for bzImage, arch/i386 and arch/x86_64 do not exist when copying the
+# defconfig file.
+ifeq ($(KERNEL_ARCH),i386)
+KERNEL_ARCH_PATH=$(LINUX26_DIR)/arch/x86
+else ifeq ($(KERNEL_ARCH),x86_64)
+KERNEL_ARCH_PATH=$(LINUX26_DIR)/arch/x86
 else
-LINUX26_IMAGE_PATH=$(LINUX26_DIR)/arch/$(KERNEL_ARCH)/boot/$(LINUX26_IMAGE_NAME)
+KERNEL_ARCH_PATH=$(LINUX26_DIR)/arch/$(KERNEL_ARCH)
 endif
+
+ifeq ($(BR2_LINUX_KERNEL_VMLINUX),y)
+LINUX26_IMAGE_PATH=$(LINUX26_DIR)/$(LINUX26_IMAGE_NAME)
+else
+ifeq ($(KERNEL_ARCH),avr32)
+LINUX26_IMAGE_PATH=$(KERNEL_ARCH_PATH)/boot/images/$(LINUX26_IMAGE_NAME)
+else
+LINUX26_IMAGE_PATH=$(KERNEL_ARCH_PATH)/boot/$(LINUX26_IMAGE_NAME)
+endif
+endif # BR2_LINUX_KERNEL_VMLINUX
 
 # Download
 $(LINUX26_DIR)/.stamp_downloaded:
 	@$(call MESSAGE,"Downloading kernel")
 	$(call DOWNLOAD,$(LINUX26_SITE),$(LINUX26_SOURCE))
-ifneq ($(filter ftp://% http://%,$(LINUX26_PATCH)),)
-	$(call DOWNLOAD,$(dir $(LINUX26_PATCH)),$(notdir $(LINUX26_PATCH)))
-endif
+	$(foreach patch,$(filter ftp://% http://%,$(LINUX26_PATCH)),\
+		$(call DOWNLOAD,$(dir $(patch)),$(notdir $(patch)))$(sep))
 	mkdir -p $(@D)
 	touch $@
 
@@ -69,15 +90,15 @@ $(LINUX26_DIR)/.stamp_extracted: $(LINUX26_DIR)/.stamp_downloaded
 # Patch
 $(LINUX26_DIR)/.stamp_patched: $(LINUX26_DIR)/.stamp_extracted
 	@$(call MESSAGE,"Patching kernel")
-ifneq ($(LINUX26_PATCH),)
-ifneq ($(filter ftp://% http://%,$(LINUX26_PATCH)),)
-	toolchain/patch-kernel.sh $(@D) $(DL_DIR) $(notdir $(LINUX26_PATCH))
-else ifeq ($(shell test -d $(LINUX26_PATCH) && echo "dir"),dir)
-	toolchain/patch-kernel.sh $(@D) $(LINUX26_PATCH) linux-\*.patch
-else
-	toolchain/patch-kernel.sh $(@D) $(dir $(LINUX26_PATCH)) $(notdir $(LINUX26_PATCH))
-endif
-endif
+	for p in $(LINUX26_PATCH) ; do \
+		if echo $$p | grep -q -E "^ftp://|^http://" ; then \
+			toolchain/patch-kernel.sh $(@D) $(DL_DIR) `basename $$p` ; \
+		elif test -d $$p ; then \
+			toolchain/patch-kernel.sh $(@D) $$p linux-\*.patch ; \
+		else \
+			toolchain/patch-kernel.sh $(@D) `dirname $$p` `basename $$p` ; \
+		fi \
+	done
 	$(Q)touch $@
 
 
@@ -87,17 +108,14 @@ $(LINUX26_DIR)/.stamp_configured: $(LINUX26_DIR)/.stamp_patched
 ifeq ($(BR2_LINUX_KERNEL_USE_DEFCONFIG),y)
 	$(TARGET_MAKE_ENV) $(MAKE1) $(LINUX26_MAKE_FLAGS) -C $(@D) $(call qstrip,$(BR2_LINUX_KERNEL_DEFCONFIG))_defconfig
 else ifeq ($(BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG),y)
-	cp $(BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE) $(@D)/.config
+	cp $(BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE) $(KERNEL_ARCH_PATH)/configs/buildroot_defconfig
+	$(TARGET_MAKE_ENV) $(MAKE1) $(LINUX26_MAKE_FLAGS) -C $(@D) buildroot_defconfig
+	rm $(KERNEL_ARCH_PATH)/configs/buildroot_defconfig
 endif
 ifeq ($(BR2_ARM_EABI),y)
 	$(call KCONFIG_ENABLE_OPT,CONFIG_AEABI,$(@D)/.config)
 else
 	$(call KCONFIG_DISABLE_OPT,CONFIG_AEABI,$(@D)/.config)
-endif
-ifeq ($(BR2_INET_IPV6),y)
-	$(call KCONFIG_ENABLE_OPT,CONFIG_IPV6,$(@D)/.config)
-else
-	$(call KCONFIG_DISABLE_OPT,CONFIG_IPV6,$(@D)/.config)
 endif
 ifeq ($(BR2_TARGET_ROOTFS_INITRAMFS),y)
 	# As the kernel gets compiled before root filesystems are
@@ -107,6 +125,9 @@ ifeq ($(BR2_TARGET_ROOTFS_INITRAMFS),y)
 	touch $(BINARIES_DIR)/rootfs.initramfs
 	$(call KCONFIG_ENABLE_OPT,CONFIG_BLK_DEV_INITRD,$(@D)/.config)
 	$(call KCONFIG_SET_OPT,CONFIG_INITRAMFS_SOURCE,\"$(BINARIES_DIR)/rootfs.initramfs\",$(@D)/.config)
+	$(call KCONFIG_SET_OPT,CONFIG_INITRAMFS_ROOT_UID,0,$(@D)/.config)
+	$(call KCONFIG_SET_OPT,CONFIG_INITRAMFS_ROOT_GID,0,$(@D)/.config)
+	$(call KCONFIG_DISABLE_OPT,CONFIG_INITRAMFS_COMPRESSION_NONE,$(@D)/.config)
 	$(call KCONFIG_ENABLE_OPT,CONFIG_INITRAMFS_COMPRESSION_GZIP,$(@D)/.config)
 endif
 	$(TARGET_MAKE_ENV) $(MAKE) $(LINUX26_MAKE_FLAGS) -C $(@D) oldconfig
@@ -130,16 +151,17 @@ $(LINUX26_DIR)/.stamp_installed: $(LINUX26_DIR)/.stamp_compiled
 	# directories, not relevant on the target
 	@if [ $(shell grep -c "CONFIG_MODULES=y" $(LINUX26_DIR)/.config) != 0 ] ; then 	\
 		$(TARGET_MAKE_ENV) $(MAKE1) $(LINUX26_MAKE_FLAGS) -C $(@D) 		\
-			INSTALL_MOD_PATH=$(TARGET_DIR) modules_install ;		\
+			DEPMOD="$(HOST_DIR)/usr/sbin/depmod" modules_install ;		\
 		rm -f $(TARGET_DIR)/lib/modules/$(LINUX26_VERSION_PROBED)/build ;	\
 		rm -f $(TARGET_DIR)/lib/modules/$(LINUX26_VERSION_PROBED)/source ;	\
 	fi
 	$(Q)touch $@
 
-linux26: host-module-init-tools $(LINUX26_DEPENDENCIES) $(LINUX26_DIR)/.stamp_installed
+linux linux26: host-module-init-tools $(LINUX26_DEPENDENCIES) $(LINUX26_DIR)/.stamp_installed
 
-linux26-menuconfig linux26-xconfig linux26-gconfig: dirs $(LINUX26_DIR)/.stamp_configured
-	$(MAKE) $(LINUX26_MAKE_FLAGS) -C $(LINUX26_DIR) $(subst linux26-,,$@)
+linux-menuconfig linux-xconfig linux-gconfig linux-nconfig linux26-menuconfig linux26-xconfig linux26-gconfig linux26-nconfig: dirs $(LINUX26_DIR)/.stamp_configured
+	$(MAKE) $(LINUX26_MAKE_FLAGS) -C $(LINUX26_DIR) \
+		$(subst linux-,,$(subst linux26-,,$@))
 
 # Support for rebuilding the kernel after the initramfs file list has
 # been generated in $(BINARIES_DIR)/rootfs.initramfs.
@@ -147,7 +169,7 @@ $(LINUX26_DIR)/.stamp_initramfs_rebuilt: $(LINUX26_DIR)/.stamp_installed $(BINAR
 	@$(call MESSAGE,"Rebuilding kernel with initramfs")
 	# Remove the previously generated initramfs which was empty,
 	# to make sure the kernel will actually regenerate it.
-	$(RM) -f $(@D)/usr/initramfs_data.cpio.*
+	$(RM) -f $(@D)/usr/initramfs_data.cpio*
 	# Build the kernel.
 	$(TARGET_MAKE_ENV) $(MAKE) $(LINUX26_MAKE_FLAGS) -C $(@D) $(LINUX26_IMAGE_NAME)
 	# Copy the kernel image to its final destination
@@ -156,7 +178,7 @@ $(LINUX26_DIR)/.stamp_initramfs_rebuilt: $(LINUX26_DIR)/.stamp_installed $(BINAR
 
 # The initramfs building code must make sure this target gets called
 # after it generated the initramfs list of files.
-linux26-rebuild-with-initramfs: $(LINUX26_DIR)/.stamp_initramfs_rebuilt
+linux-rebuild-with-initramfs linux26-rebuild-with-initramfs: $(LINUX26_DIR)/.stamp_initramfs_rebuilt
 
 ifeq ($(BR2_LINUX_KERNEL),y)
 TARGETS+=linux26

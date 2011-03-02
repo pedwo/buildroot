@@ -29,9 +29,11 @@
       <li><a href="#buildroot_innards">How Buildroot works</a></li>
       <li><a href="#using_toolchain">Using the uClibc toolchain outside Buildroot</a></li>
       <li><a href="#external_toolchain">Use an external toolchain</a></li>
+      <li><a href="#ccache-support">Using <code>ccache</code> in Buildroot</li>
       <li><a href="#downloaded_packages">Location of downloaded packages</a></li>
       <li><a href="#add_packages">Adding new packages to Buildroot</a></li>
       <li><a href="#board_support">Creating your own board support</a></li>
+      <li><a href="#faq">Frequently asked questions</a></li>
       <li><a href="#links">Resources</a></li>
     </ul>
 
@@ -158,13 +160,13 @@
  $ make gconfig
 </pre>
 
-    <p>to run the Qt3 or GTK-based configurators.</p>
+    <p>to run the Qt or GTK-based configurators.</p>
 
     <p>All of these "make" commands will need to build a configuration
     utility, so you may need to install "development" packages for relevant
     libraries used by the configuration utilities. On Debian-like systems,
     the <code>libncurses5-dev</code> package is required to use the <i>
-    menuconfig</i> interface, <code>libqt3-mt-dev</code> is required to use
+    menuconfig</i> interface, <code>libqt4-dev</code> is required to use
     the <i>xconfig</i> interface, and <code>libglib2.0-dev, libgtk2.0-dev
     and libglade2-dev</code> are needed to use the <i>gconfig</i> interface.</p>
 
@@ -182,18 +184,23 @@
  $ make
 </pre>
 
+    <p>You <b>should never</b> use <code>make -jN</code> with
+    Buildroot: it does not support <i>top-level parallel
+    make</i>. Instead, use the <code>BR2_JLEVEL</code> option to tell
+    Buildroot to run each package compilation with <code>make
+    -jN</code>.</p>
+
     <p>This command will generally perform the following steps:</p>
     <ul>
       <li>Download source files (as required)</li>
-      <li>Configure cross-compile toolchain</li>
-      <li>Build/install cross-compile toolchain</li>
+      <li>Configure, build and install the cross-compiling toolchain
+      if an internal toolchain is used, or import a toolchain if an
+      external toolchain is used</li>
       <li>Build/install selected target packages</li>
-      <li>Build a kernel image</li>
+      <li>Build a kernel image, if selected</li>
+      <li>Build a bootloader image, if selected</li>
       <li>Create a root filesystem in selected formats</li>
     </ul>
-    <p>Some of the above steps might not be performed if they are not
-    selected in the Buildroot configuration.
-   </p>
 
     <p>Buildroot output is stored in a single directory, <code>output/</code>.
     This directory contains several subdirectories:</p>
@@ -234,9 +241,8 @@
       </li>
 
       <li><code>host/</code> contains the installation of tools compiled for
-      the host that are needed for the proper execution of Buildroot, except
-      for the cross-compilation toolchain which is installed under
-      <code>staging/</code>.</li>
+      the host that are needed for the proper execution of Buildroot,
+      including the cross-compilation toolchain.</li>
 
       <li><code>toolchain/</code> contains the build directories for the
       various components of the cross-compilation toolchain.</li>
@@ -330,23 +336,14 @@
       completely rebuild your toolchain and tools, these changes will be
       lost.</li>
 
-      <li>Customize the target filesystem skeleton available under <code>
-      fs/skeleton/</code>. You can customize configuration files or other
-      stuff here. However, the full file hierarchy is not yet present
-      because it's created during the compilation process. Therefore, you
-      can't do everything on this target filesystem skeleton, but changes to
-      it do remain even if you completely rebuild the cross-compilation
-      toolchain and the tools. <br /> You can also customize the <code>
-      target/generic/device_table.txt</code> file, which is used by the
-      tools that generate the target filesystem image to properly set
-      permissions and create device nodes.<br /> These customizations are
-      deployed into <code>output/target/</code> just before the actual image
-      is made. Simply rebuilding the image by running make should propagate
-      any new changes to the image.</li>
-
-      <li>Add support for your own target in Buildroot, so that you
-      have your own target skeleton (see <a href="#board_support">this
-      section</a> for details).</li>
+      <li>Create your own <i>target skeleton</i>. You can start with
+      the default skeleton available under <code>fs/skeleton</code>
+      and then customize it to suit your
+      needs. The <code>BR2_ROOTFS_SKELETON_CUSTOM</code>
+      and <code>BR2_ROOTFS_SKELETON_CUSTOM_PATH</code> will allow you
+      to specify the location of your custom skeleton. At build time,
+      the contents of the skeleton are copied to output/target before
+      any package installation.</li>
 
       <li>In the Buildroot configuration, you can specify the path to a
       post-build script, that gets called <i>after</i> Buildroot builds all
@@ -410,20 +407,20 @@
       the one used in the Linux kernel or Buildroot, appears. Make
       your configuration changes as appropriate.</li>
 
-      <li>Copy the <code>.config</code> file to
-      <code>toolchain/uClibc/uClibc.config</code> or
-      <code>toolchain/uClibc/uClibc.config-locale</code>. The former
-      is used if you haven't selected locale support in Buildroot
-      configuration, and the latter is used if you have selected
-      locale support.</li>
+      <li>Copy the <code>$(O)/toolchain/uclibc-VERSION/.config</code>
+      file to a different place
+      (like <code>toolchain/uClibc/uClibc-myconfig.config</code>,
+      or <code>board/mymanufacturer/myboard/uClibc.config</code>) and
+      adjust the uClibc configuration (configuration
+      option <code>BR2_UCLIBC_CONFIG</code>) to use this configuration
+      instead of the default one.</li>
 
       <li>Run the compilation of Buildroot again.</li>
     </ol>
 
     <p>Otherwise, you can simply change
-    <code>toolchain/uClibc/uClibc.config</code> or
-    <code>toolchain/uClibc/uClibc.config-locale</code>, without running
-    the configuration assistant.</p>
+    <code>toolchain/uClibc/uClibc.config</code>, without running the
+    configuration assistant.</p>
 
     <p>If you want to use an existing config file for uclibc, then see
     section <a href="#environment_variables">environment variables</a>.</p>
@@ -432,7 +429,7 @@
 
     <p>The Linux kernel configuration can be customized just like
     <a href="#custom_busybox">BusyBox</a> and
-    <a href="#custom_uclibc">uClibc</a> using <code>make linux26-menuconfig
+    <a href="#custom_uclibc">uClibc</a> using <code>make linux-menuconfig
     </code>. Make sure you have enabled the kernel build in <code>make
     menuconfig</code> first. Once done, run <code>make</code> to (re)build
     everything.</p>
@@ -522,9 +519,8 @@ $(ZLIB_DIR)/libz.a: $(ZLIB_DIR)/.configured
     <ul>
       <li><b>toolchain</b> (in the <code>toolchain/</code> directory) contains
       the Makefiles and associated files for all software related to the
-      cross-compilation toolchain: <code>binutils</code>, <code>ccache</code>,
-      <code>gcc</code>, <code>gdb</code>, <code>kernel-headers</code> and
-      <code>uClibc</code>.</li>
+      cross-compilation toolchain: <code>binutils</code>, <code>gcc</code>,
+      <code>gdb</code>, <code>kernel-headers</code> and <code>uClibc</code>.</li>
 
       <li><b>package</b> (in the <code>package/</code> directory) contains the
       Makefiles and associated files for all user-space tools that Buildroot
@@ -577,87 +573,42 @@ $(ZLIB_DIR)/libz.a: $(ZLIB_DIR)/.configured
 
     <h2 id="board_support"> Creating your own board support</h2>
 
-    <p>Creating your own board support in Buildroot allows you to have
-    a convenient place to store your project's target filesystem skeleton
-    and configuration files for Buildroot, Busybox, uClibc, and the kernel.
+    <p>Creating your own board support in Buildroot allows users of a
+    particular hardware platform to easily build a system that is
+    known to work.</p>
 
-    <p>Follow these steps to integrate your board in Buildroot:</p>
+    <p>To do so, you need to create a normal Buildroot configuration
+    that builds a basic system for the hardware: toolchain, kernel,
+    bootloader, filesystem and a simple Busybox-only userspace. No
+    specific package should be selected: the configuration should be
+    as minimal as possible, and should only build a working basic
+    Busybox system for the target platform. You can of course use more
+    complicated configurations for your internal projects, but the
+    Buildroot project will only integrate basic board
+    configurations. This is because package selections are highly
+    application-specific.</p>
 
-    <ol>
-      <li>Create a new directory in <code>target/device/</code> named
-      after your company or organization</li>
+    <p>Once you have a known working configuration, run <code>make
+    savedefconfig</code>. This will generate a
+    minimal <code>defconfig</code> file at the root of the Buildroot
+    source tree. Move this file into the <code>configs/</code>
+    directory, and rename it <code>MYBOARD_defconfig</code>.</p>
 
-      <li>Add a line <code>source
-      "target/device/yourcompany/Config.in"</code> in
-      <code>target/device/Config.in</code> so that your board appears
-      in the configuration system</li>
+    <p>It is recommended to use as much as possible upstream versions
+    of the Linux kernel and bootloaders, and to use as much as
+    possible default kernel and bootloader configurations. If they are
+    incorrect for your platform, we encourage you to send fixes to the
+    corresponding upstream projects.</p>
 
-      <li>In <code>target/device/yourcompany/</code>, create a
-      directory for your project. This way, you'll be able to store
-      several of your company's projects inside Buildroot.</li>
-
-      <li>Create a <code>target/device/yourcompany/Config.in</code>
-      file that looks like the following:
-
-<pre>
-menuconfig BR2_TARGET_COMPANY
-	bool "Company projects"
-
-if BR2_TARGET_COMPANY
-
-config BR2_TARGET_COMPANY_PROJECT_FOOBAR
-	bool "Support for Company project Foobar"
-	help
-	  This option enables support for Company project Foobar
-
-endif
-</pre>
-
-      Of course, you should customize the different values to match your
-      company/organization and your project. This file will create a
-      menu entry that contains the different projects of your
-      company/organization.</li>
-
-      <li>Create a <code>target/device/yourcompany/Makefile.in</code>
-      file that looks like the following:
-
-<pre>
-ifeq ($(BR2_TARGET_COMPANY_PROJECT_FOOBAR),y)
-include target/device/yourcompany/project-foobar/Makefile.in
-endif
-</pre>
-
-      </li>
-
-      <li>Create the
-      <code>target/device/yourcompany/project-foobar/Makefile.in</code>
-      file. It is recommended that you define a
-      <code>BOARD_PATH</code> variable set to
-      <code>target/device/yourcompany/project-foobar</code> as it
-      will simplify further definitions. Then, the file might define
-      one or more of the following variables:
-        <ul>
-          <li><code>TARGET_SKELETON</code> to a directory that contains
-          the target skeleton for your project. If this variable is
-          defined, this target skeleton will be used instead of the
-          default one. If defined, the convention is to define it to
-          <code>$(BOARD_PATH)/target_skeleton</code> so that the target
-          skeleton is stored in the board specific directory.</li>
-        </ul>
-      </li>
-
-      <li>In the
-      <code>target/device/yourcompany/project-foobar/</code>
-      directory you can store configuration files for the kernel,
-      Busybox or uClibc.
-
-      You can furthermore create one or more preconfigured configuration
-      files, referencing those files. These config files are named
-      <code>something_defconfig</code> and are stored in the toplevel
-      <code>configs/</code> directory. Your users will then be able
-      to run <code>make something_defconfig</code> and get the right
-      configuration for your project</li>
-    </ol>
+    <p>However, in the mean time, you may want to store kernel or
+    bootloader configuration or patches specific to your target
+    platform. To do so, create a
+    directory <code>board/MANUFACTURER</code> and a
+    subdirectory <code>board/MANUFACTURER/BOARDNAME</code> (after
+    replacing, of course, MANUFACTURER and BOARDNAME with the
+    appropriate values, in lower case letters). You can then store
+    your patches and configurations in these directories, and
+    reference them from the main Buildroot configuration.</p>
 
     <h2 id="using_toolchain">Using the generated toolchain outside Buildroot</h2>
 
@@ -666,22 +617,44 @@ endif
     use the toolchain that was generated by Buildroot.</p>
 
     <p>The toolchain generated by Buildroot is located by default in
-    <code>output/staging/</code>. The simplest way to use it is to add
-    <code>output/staging/usr/bin/</code> to your PATH environment variable and
+    <code>output/host/</code>. The simplest way to use it is to add
+    <code>output/host/usr/bin/</code> to your PATH environment variable and
     then to use <code>ARCH-linux-gcc</code>, <code>ARCH-linux-objdump</code>,
     <code>ARCH-linux-ld</code>, etc.</p>
 
-    <p><b>Important</b>: do not try to move a gcc-3.x toolchain to another
-    directory &mdash; it won't work because there are some hardcoded paths
-    in the gcc-3.x configuration. If you are using a current gcc-4.x, it is
-    possible to relocate the toolchain &mdash; but then <code>--sysroot</code>
-    must be passed every time the compiler is called to tell where the
-    libraries and header files are.</p>
+    <p>It is possible to relocate the toolchain &mdash; but
+    then <code>--sysroot</code> must be passed every time the compiler
+    is called to tell where the libraries and header files are.</p>
 
     <p>It is also possible to generate the Buildroot toolchain in a
-    directory other than <code>output/staging</code> by using the <code>
-    Build options -&gt; Toolchain and header file location</code> options.
+    directory other than <code>output/host</code> by using the <code>
+    Build options -&gt; Host dir</code> option.
     This could be useful if the toolchain must be shared with other users.</p>
+
+    <h2 id="ccache-support">Using <code>ccache</code> in Buildroot</h2>
+
+    <p><a href="http://ccache.samba.org">ccache</a> is a compiler
+    cache. It stores the object files resulting from each compilation
+    process, and is able to skip future compilation of the same source
+    file (with same compiler and same arguments) by using the
+    pre-existing object files. When doing almost identical builds from
+    scratch a number of times, it can nicely speed up the build
+    process.</p>
+
+    <p><code>ccache</code> support is integrated in Buildroot. You
+    just have to enable <code>Enable compiler cache</code>
+    in <code>Build options</code>. This will automatically build
+    <code>ccache</code> and use it for every host and target
+    compilation.</p>
+
+    <p>The cache is located
+    in <code>$HOME/.buildroot-ccache</code>. It is stored outside of
+    Buildroot output directory so that it can be shared by separate
+    Buildroot builds. If you want to get rid of the cache, simply
+    remove this directory.</p>
+
+    <p>You can get statistics on the cache (its size, number of hits,
+    misses, etc.) by running <code>make ccache-stats</code>.</p>
 
     <h2 id="downloaded_packages">Location of downloaded packages</h2>
 
@@ -713,40 +686,105 @@ endif
 
     <h2 id="external_toolchain">Using an external toolchain</h2>
 
-    <p>It might be useful not to use the toolchain generated by
-    Buildroot, for example if you already have a toolchain that is known
-    to work for your specific CPU, or if the toolchain generation feature
-    of Buildroot is not sufficiently flexible for you (for example if you
-    need to generate a system with <i>glibc</i> instead of
-    <i>uClibc</i>). Buildroot supports using an <i>external
-    toolchain</i>.</p>
-
-    <p>To enable the use of an external toolchain, go to the
-    <code>Toolchain</code> menu, and :</p>
+    <p>Using an already existing toolchain is useful for different
+    reasons:</p>
 
     <ul>
-      <li>Select the <code>External binary toolchain</code> toolchain
-      type</li>
-      <li>Adjust the <code>External toolchain path</code>
-      appropriately. It should be set to a path where a bin/ directory
-      contains your cross-compiling tools</li>
-      <li>Adjust the <code>External toolchain prefix</code> so that the
-      prefix, suffixed with <code>-gcc</code> or <code>-ld</code> will
-      correspond to your cross-compiling tools</li>
+      <li>you already have a toolchain that is known to work for your
+	specific CPU</li>
+      <li>you want to speed up the Buildroot build process by skipping
+      the long toolchain build part</li>
+      <li>the toolchain generation feature of Buildroot is not
+	sufficiently flexible for you (for example if you need to
+	generate a system with <i>glibc</i> instead of
+	<i>uClibc</i>)</li>
     </ul>
 
-    <p>If you are using an external toolchain based on <i>uClibc</i>, the
-    <code>Core C library from the external toolchain</code> and
-    <code>Libraries to copy from the external toolchain</code> options
-    should already have correct values. However, if your external
-    toolchain is based on <i>glibc</i>, you'll have to change these values
-    according to your cross-compiling toolchain.</p>
+    <p>Buildroot supports using existing toolchains through a
+    mechanism called <i>external toolchain</i>. The external toolchain
+    mechanism is enabled in the <code>Toolchain</code> menu, by
+    selecting <code>External toolchain</code> in <code>Toolchain
+    type</code>.</p>
 
-    <p>To generate external toolchains, we recommend using
-    <a href="http://ymorin.is-a-geek.org/dokuwiki/projects/crosstool">Crosstool-NG</a>.
-    It allows generating toolchains based on <i>uClibc</i>, <i>glibc</i>
-    and <i>eglibc</i> for a wide range of architectures and has good
-    community support.</p>
+    <p>Then, you have three solutions to use an external
+    toolchain:</p>
+
+    <ul>
+
+      <li>Use a predefined external toolchain profile, and let
+      Buildroot download, extract and install the toolchain. Buildroot
+      already knows about a few CodeSourcery toolchains for ARM,
+      PowerPC, MIPS and SuperH. Just select the toolchain profile
+      in <code>Toolchain</code> through the available ones. This is
+      definitely the easiest solution.</li>
+
+      <li>Use a predefined external toolchain profile, but instead of
+      having Buildroot download and extract the toolchain, you can
+      tell Buildroot where your toolchain is already installed on your
+      system. Just select the toolchain profile
+      in <code>Toolchain</code> through the available ones,
+      unselect <code>Download toolchain automatically</code>, and fill
+      the <code>Toolchain path</code> text entry with the path to your
+      cross-compiling toolchain.</li>
+
+      <li>Use a completely custom external toolchain. This is
+      particularly useful for toolchains generated using
+      Crosstool-NG. To do this, select the <code>Custom
+      toolchain</code> solution in the <code>Toolchain</code>
+      list. You need to fill the <code>Toolchain
+      path</code>, <code>Toolchain prefix</code> and <code>External
+      toolchain C library</code> options. Then, you have to tell
+      Buildroot what your external toolchain supports. If your
+      external toolchain uses the <i>glibc</i> library, you only have
+      to tell whether your toolchain supports C++ or not. If your
+      external toolchain uses the <i>uclibc</i> library, then you have
+      to tell Buildroot if it supports largefile, IPv6, RPC,
+      wide-char, locale, program invocation, threads and C++. At the
+      beginning of the execution, Buildroot will tell you if the
+      selected options do not match the toolchain configuration.</li>
+
+    </ul>
+
+    <p>Our external toolchain support has been tested with toolchains
+    from CodeSourcery, toolchains generated
+    by <a href="http://ymorin.is-a-geek.org/dokuwiki/projects/crosstool">Crosstool-NG</a>,
+    and toolchains generated by Buildroot itself. In general, all
+    toolchains that support the <i>sysroot</i> feature should
+    work. If not, do not hesitate to contact the developers.</p>
+
+    <p>We do not support toolchains from
+    the <a href="http://www.denx.de/wiki/DULG/ELDK">ELDK of Denx</a>,
+    for two reasons:</p>
+
+    <ul>
+
+      <li>The ELDK does not contain a pure toolchain (i.e just the
+      compiler, binutils, the C and C++ libraries), but a toolchain
+      that comes with a very large set of pre-compiled libraries and
+      programs. Therefore, Buildroot cannot import the <i>sysroot</i>
+      of the toolchain, as it would contain hundreds of megabytes of
+      pre-compiled libraries that are normally built by
+      Buildroot.</li>
+
+      <li>The ELDK toolchains have a completely non-standard custom
+      mechanism to handle multiple library variants. Instead of using
+      the standard GCC <i>multilib</i> mechanism, the ARM ELDK uses
+      different symbolic links to the compiler to differentiate
+      between library variants (for ARM soft-float and ARM VFP), and
+      the PowerPC ELDK compiler uses a <code>CROSS_COMPILE</code>
+      environment variable. This non-standard behaviour makes it
+      difficult to support ELDK in Buildroot.</li>
+
+    </ul>
+
+    <p>We also do not support using the distribution toolchain (i.e
+    the gcc/binutils/C library installed by your distribution) as the
+    toolchain to build software for the target. This is because your
+    distribution toolchain is not a "pure" toolchain (i.e only with
+    the C/C++ library), so we cannot import it properly into the
+    Buildroot build environment. So even if you are building a system
+    for a x86 or x86_64 target, you have to generate a
+    cross-compilation toolchain with Buildroot or Crosstool-NG.</p>
 
     <h2 id="add_packages">Adding new packages to Buildroot</h2>
 
@@ -764,6 +802,8 @@ endif
           <li><a href="#generic-reference">Makefile for generic packages : reference</a></li>
           <li><a href="#autotools-tutorial">Makefile for autotools-based packages : tutorial</a></li>
           <li><a href="#autotools-reference">Makefile for autotools-based packages : reference</a></li>
+          <li><a href="#cmake-tutorial">Makefile for CMake-based packages : tutorial</a></li>
+          <li><a href="#cmake-reference">Makefile for CMake-based packages : reference</a></li>
           <li><a href="#manual-tutorial">Manual Makefile : tutorial</a></li>
         </ul>
       </li>
@@ -981,9 +1021,12 @@ $(eval $(call GENTARGETS,package,libfoo,host))
     <code>libfoo</code>) :</p>
 
     <ul>
-      <li><code>LIBFOO_VERSION</code>, mandatory, must contain the version
-      of the package. Note that if <code>HOST_LIBFOO_VERSION</code> doesn't
-      exist, it is assumed to be the same as <code>LIBFOO_VERSION</code>.<br/>
+      <li><code>LIBFOO_VERSION</code>, mandatory, must contain the
+      version of the package. Note that
+      if <code>HOST_LIBFOO_VERSION</code> doesn't exist, it is assumed
+      to be the same as <code>LIBFOO_VERSION</code>. It can also be a
+      Subversion or Git branch or tag, for packages that are fetched
+      directly from their revision control system.<br/>
       Example: <code>LIBFOO_VERSION = 0.1.2</code></li>
 
       <li><code>LIBFOO_SOURCE</code> may contain the name of the tarball of
@@ -1002,13 +1045,38 @@ $(eval $(call GENTARGETS,package,libfoo,host))
       in the package directory inside Buildroot will be applied to the
       package after extraction.</li>
 
-      <li><code>LIBFOO_SITE</code> may contain the Internet location of the
-      tarball of the package. If <code>HOST_LIBFOO_SITE</code> is not
-      specified, it defaults to <code>LIBFOO_SITE</code>. If none are
-      specified, then the location is assumed to be
+      <li><code>LIBFOO_SITE</code> may contain the Internet location
+      of the package. It can either be the HTTP or FTP location of a
+      tarball, or the URL of a Git or Subversion repository
+      (see <code>LIBFOO_SITE_METHOD</code>
+      below). If <code>HOST_LIBFOO_SITE</code> is not specified, it
+      defaults to <code>LIBFOO_SITE</code>. If none are specified,
+      then the location is assumed to be
       <code>http://$$(BR2_SOURCEFORGE_MIRROR).dl.sourceforge.net/sourceforge/packagename</code>.
-      <br/>Example:
-      <code>LIBFOO_SITE=http://www.libfoosoftware.org/libfoo</code>.</li>
+      <br/>Examples:<br/>
+      <code>LIBFOO_SITE=http://www.libfoosoftware.org/libfoo</code><br/>
+      <code>LIBFOO_SITE=http://svn.xiph.org/trunk/Tremor/</code></li>
+
+      <li><code>LIBFOO_SITE_METHOD</code> may contain the method to
+      fetch the package source code. It can either
+      be <code>wget</code> (for normal FTP/HTTP downloads of
+      tarballs), <code>svn</code>, <code>git</code> or <code>bzr</code>.
+      When not specified, it is guessed from the URL given
+      in <code>LIBFOO_SITE</code>: <code>svn://</code>, <code>git://</code>
+      and <code>bzr://</code> URLs will use the <code>svn</code>,
+      <code>git</code> and <code>bzr</code> methods respectively. All other
+      URL-types will use the <code>wget</code> method. So for example, in the
+      case of a package whose source code is available through
+      Subversion repository on HTTP, one <i>must</i>
+      specifiy <code>LIBFOO_SITE_METHOD=svn</code>. For <code>svn</code>
+      and <code>git</code> methods, what Buildroot does is a
+      checkout/clone of the repository which is then tarballed and
+      stored into the download cache. Next builds will not
+      checkout/clone again, but will use the tarball
+      directly. When <code>HOST_LIBFOO_SITE_METHOD</code> is not
+      specified, it defaults to the value
+      of <code>LIBFOO_SITE_METHOD</code>. See <code>package/multimedia/tremor/</code>
+      for an example.</li>
 
       <li><code>LIBFOO_DEPENDENCIES</code> lists the dependencies (in terms
       of package name) that are required for the current target package to
@@ -1311,13 +1379,154 @@ LIBFOO_POST_PATCH_HOOKS += LIBFOO_POST_PATCH_FIXUP
       general case.</li>
     </ul>
 
+    <h4 id="cmake-tutorial">Makefile for CMake-based packages : tutorial</h4>
+
+    <p>First, let's see how to write a <code>.mk</code> file for a CMake-based
+    package, with an example :</p>
+
+<pre>
+<span style="color: #000000">01:</span><span style="font-style: italic; color: #9A1900"> #############################################################</span>
+<span style="color: #000000">02:</span><span style="font-style: italic; color: #9A1900"> #</span>
+<span style="color: #000000">03:</span><span style="font-style: italic; color: #9A1900"> # libfoo</span>
+<span style="color: #000000">04:</span><span style="font-style: italic; color: #9A1900"> #</span>
+<span style="color: #000000">05:</span><span style="font-style: italic; color: #9A1900"> #############################################################</span>
+<span style="color: #000000">06:</span><span style="color: #009900"> LIBFOO_VERSION</span> = 1.0
+<span style="color: #000000">07:</span><span style="color: #009900"> LIBFOO_SOURCE</span> = libfoo-<span style="color: #009900">$(LIBFOO_VERSION)</span>.tar.gz
+<span style="color: #000000">08:</span><span style="color: #009900"> LIBFOO_SITE</span> = http://www.foosoftware.org/download
+<span style="color: #000000">09:</span><span style="color: #009900"> LIBFOO_INSTALL_STAGING</span> = YES
+<span style="color: #000000">10:</span><span style="color: #009900"> LIBFOO_INSTALL_TARGET</span> = YES
+<span style="color: #000000">11:</span><span style="color: #009900"> LIBFOO_CONF_OPT</span> = -DBUILD_DEMOS=ON
+<span style="color: #000000">12:</span><span style="color: #009900"> LIBFOO_DEPENDENCIES</span> = libglib2 host-pkg-config
+<span style="color: #000000">13:</span>
+<span style="color: #000000">14:</span><span style="color: #009900"> $(eval $(call CMAKETARGETS,package,libfoo))</span>
+</pre>
+
+    <p>On line 6, we declare the version of the package.</p>
+
+    <p>On line 7 and 8, we declare the name of the tarball and the location
+    of the tarball on the Web. Buildroot will automatically download the
+    tarball from this location.</p>
+
+    <p>On line 9, we tell Buildroot to install the package to the staging
+    directory. The staging directory, located in <code>output/staging/</code>
+    is the directory where all the packages are installed, including their
+    development files, etc. By default, packages are not installed to the
+    staging directory, since usually, only libraries need to be installed in
+    the staging directory: their development files are needed to compile
+    other libraries or applications depending on them. Also by default, when
+    staging installation is enabled, packages are installed in this location
+    using the <code>make install</code> command.</p>
+
+    <p>On line 10, we tell Buildroot to also install the package to the
+    target directory. This directory contains what will become the root
+    filesystem running on the target. Usually, we try not to install header
+    files and to install stripped versions of the binary. By default, target
+    installation is enabled, so in fact, this line is not strictly
+    necessary. Also by default, packages are installed in this location
+    using the <code>make install</code> command.</p>
+
+    <p>On line 11, we tell Buildroot to pass custom options to CMake when it is
+    configuring the package.</p>
+
+    <p>On line 12, we declare our dependencies, so that they are built
+    before the build process of our package starts.</p>
+
+    <p>Finally, on line line 14, we invoke the <code>CMAKETARGETS</code>
+    macro that generates all the Makefile rules that actually allows the
+    package to be built.</p>
+
+    <h4 id="cmake-reference">Makefile for CMake packages : reference</h4>
+
+    <p>The main macro of the CMake package infrastructure is
+    <code>CMAKETARGETS</code>. It has the same number of arguments and the
+    same semantic as the <code>GENTARGETS</code> macro, which is the main
+    macro of the generic package infrastructure. For CMake packages, the
+    ability to have target and host packages is also available.</p>
+
+    <p>Just like the generic infrastructure, the CMake infrastructure
+    works by defining a number of variables before calling the
+    <code>CMAKETARGETS</code> macro.</p>
+
+    <p>First, all the package metadata information variables that exist in the
+    generic infrastructure also exist in the CMake infrastructure:
+    <code>LIBFOO_VERSION</code>, <code>LIBFOO_SOURCE</code>,
+    <code>LIBFOO_PATCH</code>, <code>LIBFOO_SITE</code>,
+    <code>LIBFOO_SUBDIR</code>, <code>LIBFOO_DEPENDENCIES</code>,
+    <code>LIBFOO_INSTALL_STAGING</code>, <code>LIBFOO_INSTALL_TARGET</code>.</p>
+
+    <p>A few additional variables, specific to the CMake infrastructure,
+    can also be defined. Many of them are only useful in very specific
+    cases, typical packages will therefore only use a few of them.</p>
+
+    <ul>
+      <li><code>LIBFOO_SUBDIR</code> may contain the name of a subdirectory
+      inside the package that contains the main CMakeLists.txt file. This is
+      useful, if for example, the main CMakeLists.txt file is not at the root
+      of the tree extracted by the tarball. If <code>HOST_LIBFOO_SUBDIR</code>
+      is not specified, it defaults to <code>LIBFOO_SUBDIR</code>.</li>
+
+      <li><code>LIBFOO_CONF_ENV</code>, to specify additional environment
+      variables to pass to CMake. By default, empty.</li>
+
+      <li><code>LIBFOO_CONF_OPT</code>, to specify additional configure
+      options to pass to CMake. By default, empty.</li>
+
+      <li><code>LIBFOO_MAKE</code>, to specify an alternate <code>make</code>
+      command. This is typically useful when parallel make is enabled in
+      the configuration (using <code>BR2_JLEVEL</code>) but that this
+      feature should be disabled for the given package, for one reason or
+      another. By default, set to <code>$(MAKE)</code>. If parallel building
+      is not supported by the package, then it should be set to
+      <code>LIBFOO_MAKE=$(MAKE1)</code>.</li>
+
+      <li><code>LIBFOO_MAKE_ENV</code>, to specify additional environment
+      variables to pass to make in the build step. These are passed before
+      the <code>make</code> command. By default, empty.</li>
+
+      <li><code>LIBFOO_MAKE_OPT</code>, to specify additional variables to
+      pass to make in the build step. These are passed after the
+      <code>make</code> command. By default, empty.</li>
+
+      <li><code>LIBFOO_INSTALL_STAGING_OPT</code> contains the make options
+      used to install the package to the staging directory. By default, the
+      value is <code>DESTDIR=$$(STAGING_DIR) install</code>, which is
+      correct for most CMake packages. It is still possible to override
+      it.</li>
+
+      <li><code>LIBFOO_INSTALL_TARGET_OPT</code> contains the make options
+      used to install the package to the target directory. By default, the
+      value is <code>DESTDIR=$$(TARGET_DIR) install</code>. The default
+      value is correct for most CMake packages, but it is still possible
+      to override it if needed.</li>
+
+      <li><code>LIBFOO_CLEAN_OPT</code> contains the make options used to
+      clean the package. By default, the value is <code>clean</code>.</li>
+    </ul>
+
+    <p>With the CMake infrastructure, all the steps required to build
+    and install the packages are already defined, and they generally work
+    well for most CMake-based packages. However, when required, it is
+    still possible to customize what is done in any particular step:</p>
+
+    <ul>
+      <li>By adding a post-operation hook (after extract, patch, configure,
+      build or install). See the reference documentation of the generic
+      infrastructure for details.</li>
+
+      <li>By overriding one of the steps. For example, even if the CMake
+      infrastructure is used, if the package <code>.mk</code> file defines its
+      own <code>LIBFOO_CONFIGURE_CMDS</code> variable, it will be used
+      instead of the default CMake one. However, using this method
+      should be restricted to very specific cases. Do not use it in the
+      general case.</li>
+    </ul>
+
     <h4 id ="manual-tutorial">Manual Makefile : tutorial</h4>
 
     <p><b>NOTE: new manual makefiles should not be created, and existing
-    manual makefiles should be converted either to the generic
-    infrastructure or the autotools infrastructure. This section is only
-    kept to document the existing manual makefiles and to help understand
-    how they work.</b></p>
+    manual makefiles should be converted either to the generic, autotools
+    or cmake infrastructure. This section is only kept to document the existing
+    manual makefiles and to help understand how they work.</b></p>
 
 <pre>
 01: #############################################################
@@ -1553,6 +1762,49 @@ LIBFOO_POST_PATCH_HOOKS += LIBFOO_POST_PATCH_FIXUP
 
     <p>If you package software that might be useful for other people, don't
     forget to send a patch to Buildroot developers!</p>
+
+    <h2 id="faq">Frequently asked questions</h2>
+
+    <ul>
+      <li><a href="#faq-boot-hangs">The boot hangs
+      after <code>Starting network...</code></a></li>
+      <li><a href="#module-init-tools-doesnt-build">module-init-tools
+      fails to build with <code>cannot find -lc</code></a></li>
+    </ul>
+
+    <h3 id="faq-boot-hangs">The boot hangs after <code>Starting
+    network...</code></h3>
+
+    <p>If the boot process seems to hang after the following messages
+    (messages not necessarly exactly similar, depending on the list of
+    packages selected):</p>
+
+    <pre>Freeing init memory: 3972K
+Initializing random number generator... done.
+Starting network...
+Starting dropbear sshd: generating rsa key... generating dsa key... OK</pre>
+
+    <p>then it means that your system is running, but didn't start a
+    shell on the serial console. In order to have the system start a
+    shell on your serial console, you have to go in the Buildroot
+    configuration, <code>Target options</code>, enable <code>Generic
+    serial port config</code>, and select the serial port and speed
+    you would like to use for the shell. This will automatically tune
+    the <code>/etc/inittab</code> file of the generated system so that
+    a shell starts on the correct serial port.</p>
+
+    <h3 id="module-init-tools-doesnt-build">module-init-tools
+      fails to build with <code>cannot find -lc</code></h3>
+
+    <p>If the build of <i>module-init-tools</i> for the host fails
+    with:</p>
+
+    <pre>/usr/bin/ld: cannot find -lc </pre>
+
+    <p>then probably you are running a Fedora (or similar)
+    distribution, and you should install the <code>glibc-static</code>
+    package. This is because the <i>module-init-tools</i> build
+    process wants to link statically against the C library.</p>
 
     <h2 id="links">Resources</h2>
 

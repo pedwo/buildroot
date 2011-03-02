@@ -1,7 +1,7 @@
 # Makefile for buildroot2
 #
 # Copyright (C) 1999-2005 by Erik Andersen <andersen@codepoet.org>
-# Copyright (C) 2006-2010 by the Buildroot developers <buildroot@uclibc.org>
+# Copyright (C) 2006-2011 by the Buildroot developers <buildroot@uclibc.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #--------------------------------------------------------------
 
 # Set and export the version string
-export BR2_VERSION:=2010.11-rc1
+export BR2_VERSION:=2011.02
 
 # This top-level Makefile can *not* be executed in parallel
 .NOTPARALLEL:
@@ -75,7 +75,6 @@ EXTRAMAKEARGS = O=$(O)
 NEED_WRAPPER=y
 endif
 
-# $(shell find . -name *_defconfig |sed 's/.*\///')
 # Pull in the user's configuration file
 ifeq ($(filter $(noconfig_targets),$(MAKECMDGOALS)),)
 -include $(CONFIG_DIR)/.config
@@ -126,10 +125,13 @@ HOSTAS:=as
 endif
 ifndef HOSTCC
 HOSTCC:=gcc
-else
+HOSTCC:=$(shell which $(HOSTCC) || type -p $(HOSTCC) || echo gcc)
+HOSTCC_NOCCACHE:=$(HOSTCC)
 endif
 ifndef HOSTCXX
 HOSTCXX:=g++
+HOSTCXX:=$(shell which $(HOSTCXX) || type -p $(HOSTCXX) || echo g++)
+HOSTCXX_NOCCACHE:=$(HOSTCXX)
 endif
 ifndef HOSTFC
 HOSTFC:=gfortran
@@ -148,8 +150,6 @@ HOSTNM:=nm
 endif
 HOSTAR:=$(shell which $(HOSTAR) || type -p $(HOSTAR) || echo ar)
 HOSTAS:=$(shell which $(HOSTAS) || type -p $(HOSTAS) || echo as)
-HOSTCC:=$(shell which $(HOSTCC) || type -p $(HOSTCC) || echo gcc)
-HOSTCXX:=$(shell which $(HOSTCXX) || type -p $(HOSTCXX) || echo g++)
 HOSTFC:=$(shell which $(HOSTLD) || type -p $(HOSTLD) || echo || which g77 || type -p g77 || echo gfortran)
 HOSTCPP:=$(shell which $(HOSTCPP) || type -p $(HOSTCPP) || echo cpp)
 HOSTLD:=$(shell which $(HOSTLD) || type -p $(HOSTLD) || echo ld)
@@ -157,6 +157,7 @@ HOSTLN:=$(shell which $(HOSTLN) || type -p $(HOSTLN) || echo ln)
 HOSTNM:=$(shell which $(HOSTNM) || type -p $(HOSTNM) || echo nm)
 
 export HOSTAR HOSTAS HOSTCC HOSTCXX HOSTFC HOSTLD
+export HOSTCC_NOCCACHE HOSTCXX_NOCCACHE
 
 # bash prints the name of the directory on 'cd <dir>' if CDPATH is
 # set, so unset it here to not cause problems. Notice that the export
@@ -185,6 +186,12 @@ cc-option=$(shell if $(TARGET_CC) $(TARGET_CFLAGS) $(1) -S -o /dev/null -xc /dev
 #############################################################
 unexport CROSS_COMPILE
 unexport ARCH
+unexport CC
+unexport CXX
+unexport CPP
+unexport CFLAGS
+unexport CXXFLAGS
+unexport GREP_OPTIONS
 
 GNU_HOST_NAME:=$(shell package/gnuconfig/config.guess)
 
@@ -232,10 +239,15 @@ PREFERRED_LIB_FLAGS:=--enable-static --enable-shared
 # along with the packages to build for the target.
 #
 ##############################################################
+
+ifeq ($(BR2_CCACHE),y)
+BASE_TARGETS += host-ccache
+endif
+
 ifeq ($(BR2_TOOLCHAIN_BUILDROOT),y)
-BASE_TARGETS:=uclibc-configured binutils cross_compiler uclibc-target-utils kernel-headers
+BASE_TARGETS += uclibc-configured host-binutils cross_compiler uclibc-target-utils kernel-headers
 else
-BASE_TARGETS:=uclibc
+BASE_TARGETS += uclibc
 endif
 TARGETS:=
 
@@ -251,6 +263,7 @@ endif
 KERNEL_ARCH:=$(shell echo "$(ARCH)" | sed -e "s/-.*//" \
 	-e s/i.86/i386/ -e s/sun4u/sparc64/ \
 	-e s/arm.*/arm/ -e s/sa110/arm/ \
+	-e s/bfin/blackfin/ \
 	-e s/parisc64/parisc/ \
 	-e s/powerpc64/powerpc/ \
 	-e s/ppc.*/powerpc/ -e s/mips.*/mips/ \
@@ -262,10 +275,8 @@ TAR_OPTIONS=$(call qstrip,$(BR2_TAR_OPTIONS)) -xf
 
 GNU_TARGET_SUFFIX:=-$(call qstrip,$(BR2_GNU_TARGET_SUFFIX))
 
-STAGING_DIR:=$(call qstrip,$(BR2_STAGING_DIR))
-
-# packages compiled for the host goes here
-HOST_DIR:=$(BASE_DIR)/host
+# packages compiled for the host go here
+HOST_DIR:=$(call qstrip,$(BR2_HOST_DIR))
 
 # stamp (dependency) files go here
 STAMP_DIR:=$(BASE_DIR)/stamps
@@ -273,9 +284,17 @@ STAMP_DIR:=$(BASE_DIR)/stamps
 BINARIES_DIR:=$(BASE_DIR)/images
 TARGET_DIR:=$(BASE_DIR)/target
 TOOLCHAIN_DIR=$(BASE_DIR)/toolchain
+TOOLCHAIN_EXTERNAL_DIR=$(BASE_DIR)/external-toolchain
 TARGET_SKELETON=$(TOPDIR)/fs/skeleton
 
 BR2_DEPENDS_DIR=$(BUILD_DIR)/buildroot-config
+
+ifeq ($(BR2_CCACHE),y)
+CCACHE:=$(HOST_DIR)/usr/bin/ccache
+CCACHE_CACHE_DIR=$(HOME)/.buildroot-ccache
+HOSTCC  := $(CCACHE) $(HOSTCC)
+HOSTCXX := $(CCACHE) $(HOSTCXX)
+endif
 
 include toolchain/Makefile.in
 include package/Makefile.in
@@ -288,9 +307,6 @@ include package/Makefile.in
 #############################################################
 
 all: world
-
-# In this section, we need .config
--include $(CONFIG_DIR)/.config.cmd
 
 # We also need the various per-package makefiles, which also add
 # each selected package to TARGETS if that package was selected
@@ -323,13 +339,32 @@ TARGETS_CLEAN:=$(patsubst %,%-clean,$(TARGETS))
 TARGETS_SOURCE:=$(patsubst %,%-source,$(TARGETS) $(BASE_TARGETS))
 TARGETS_DIRCLEAN:=$(patsubst %,%-dirclean,$(TARGETS))
 TARGETS_ALL:=$(patsubst %,__real_tgt_%,$(TARGETS))
+
+# host-* dependencies have to be handled specially, as those aren't
+# visible in Kconfig and hence not added to a variable like TARGETS.
+# instead, find all the host-* targets listed in each <PKG>_DEPENDENCIES
+# variable for each enabled target.
+# Notice: this only works for newstyle gentargets/autotargets packages
+TARGETS_HOST_DEPS = $(sort $(filter host-%,$(foreach dep,\
+		$(addsuffix _DEPENDENCIES,$(call UPPERCASE,$(TARGETS))),\
+		$($(dep)))))
+# Host packages can in turn have their own dependencies. Likewise find
+# all the package names listed in the HOST_<PKG>_DEPENDENCIES for each
+# host package found above. Ideally this should be done recursively until
+# no more packages are found, but that's hard to do in make, so limit to
+# 1 level for now.
+HOST_DEPS = $(sort $(foreach dep,\
+		$(addsuffix _DEPENDENCIES,$(call UPPERCASE,$(TARGETS_HOST_DEPS))),\
+		$($(dep))))
+HOST_SOURCE += $(addsuffix -source,$(sort $(TARGETS_HOST_DEPS) $(HOST_DEPS)))
+
 # all targets depend on the crosscompiler and it's prerequisites
 $(TARGETS_ALL): __real_tgt_%: $(BASE_TARGETS) %
 
 dirs: $(DL_DIR) $(TOOLCHAIN_DIR) $(BUILD_DIR) $(STAGING_DIR) $(TARGET_DIR) \
 	$(HOST_DIR) $(BR2_DEPENDS_DIR) $(BINARIES_DIR) $(STAMP_DIR)
 
-$(BASE_TARGETS): dirs
+$(BASE_TARGETS): dirs $(O)/toolchainfile.cmake
 
 $(BUILD_DIR)/buildroot-config/auto.conf: $(CONFIG_DIR)/.config
 	$(MAKE) $(EXTRAMAKEARGS) silentoldconfig
@@ -338,6 +373,21 @@ prepare: $(BUILD_DIR)/buildroot-config/auto.conf
 
 world: prepare dependencies dirs $(BASE_TARGETS) $(TARGETS_ALL)
 
+$(O)/toolchainfile.cmake:
+	@echo -en "\
+	set(CMAKE_SYSTEM_NAME Linux)\n\
+	set(CMAKE_C_COMPILER $(CMAKE_TARGET_CC))\n\
+	set(CMAKE_CXX_COMPILER $(CMAKE_TARGET_CXX))\n\
+	set(CMAKE_C_FLAGS \"\$${CMAKE_C_FLAGS} $(CMAKE_TARGET_CFLAGS)\" CACHE STRING \"Buildroot CFLAGS\" FORCE)\n\
+	set(CMAKE_CXX_FLAGS \"\$${CMAKE_CXX_FLAGS} $(CMAKE_TARGET_CXXFLAGS)\" CACHE STRING \"Buildroot CXXFLAGS\" FORCE)\n\
+	set(CMAKE_INSTALL_SO_NO_EXE 0)\n\
+	set(CMAKE_PROGRAM_PATH \"$(HOST_DIR)/usr/bin\")\n\
+	set(CMAKE_FIND_ROOT_PATH \"$(STAGING_DIR)\")\n\
+	set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)\n\
+	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)\n\
+	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)\n\
+	set(ENV{PKG_CONFIG_SYSROOT_DIR} \"$(STAGING_DIR)\")\n\
+	" > $@
 
 .PHONY: all world dirs clean distclean source outputmakefile \
 	$(BASE_TARGETS) $(TARGETS) $(TARGETS_ALL) \
@@ -360,6 +410,7 @@ $(STAGING_DIR):
 	@mkdir -p $(STAGING_DIR)/usr/lib
 	@mkdir -p $(STAGING_DIR)/usr/include
 	@mkdir -p $(STAGING_DIR)/usr/bin
+	@ln -snf $(STAGING_DIR) $(BASE_DIR)/staging
 
 ifeq ($(BR2_ROOTFS_SKELETON_CUSTOM),y)
 TARGET_SKELETON=$(BR2_ROOTFS_SKELETON_CUSTOM_PATH)
@@ -370,9 +421,6 @@ $(BUILD_DIR)/.root:
 	if ! [ -d "$(TARGET_DIR)/bin" ]; then \
 		if [ -d "$(TARGET_SKELETON)" ]; then \
 			cp -fa $(TARGET_SKELETON)/* $(TARGET_DIR)/; \
-		fi; \
-		if [ -d "$(TARGET_SKELETON_PATCH)" ]; then \
-			toolchain/patch-kernel.sh $(TARGET_DIR) $(TARGET_SKELETON_PATCH)/ \*patch\*; \
 		fi; \
 		touch $(STAGING_DIR)/.fakeroot.00000; \
 	fi
@@ -401,8 +449,19 @@ ifneq ($(BR2_HAVE_DOCUMENTATION),y)
 	rm -rf $(TARGET_DIR)/usr/info $(TARGET_DIR)/usr/share/info
 	rm -rf $(TARGET_DIR)/usr/doc $(TARGET_DIR)/usr/share/doc
 	rm -rf $(TARGET_DIR)/usr/share/gtk-doc
+	-rmdir $(TARGET_DIR)/usr/share 2>/dev/null
 endif
-	find $(TARGET_DIR) -type f -perm +111 | xargs $(STRIPCMD) 2>/dev/null || true
+ifeq ($(BR2_PACKAGE_PYTHON_PY_ONLY),y)
+	find $(TARGET_DIR)/usr/lib/ -name '*.pyc' -print0 | xargs -0 rm -f
+endif
+ifeq ($(BR2_PACKAGE_PYTHON_PYC_ONLY),y)
+	find $(TARGET_DIR)/usr/lib/ -name '*.py' -print0 | xargs -0 rm -f
+endif
+	find $(TARGET_DIR) -type f -perm +111 '!' -name 'libthread_db*.so*' | \
+		xargs $(STRIPCMD) 2>/dev/null || true
+	find $(TARGET_DIR)/lib/modules -type f -name '*.ko' | \
+		xargs -r $(KSTRIPCMD) || true
+
 	mkdir -p $(TARGET_DIR)/etc
 	# Mandatory configuration file and auxilliary cache directory
 	# for recent versions of ldconfig
@@ -443,7 +502,7 @@ _source-check:
 	$(MAKE) DL_MODE=SOURCE_CHECK $(EXTRAMAKEARGS) source
 
 external-deps:
-	@$(MAKE) -Bs DL_MODE=SHOW_EXTERNAL_DEPS $(EXTRAMAKEARGS) source
+	@$(MAKE) -Bs DL_MODE=SHOW_EXTERNAL_DEPS $(EXTRAMAKEARGS) source | sort -u
 
 show-targets:
 	@echo $(TARGETS)
@@ -460,7 +519,7 @@ export HOSTCFLAGS
 
 $(BUILD_DIR)/buildroot-config/%onf:
 	mkdir -p $(@D)/lxdialog
-	$(MAKE) CC="$(HOSTCC)" obj=$(@D) -C $(CONFIG) -f Makefile.br $(@F)
+	$(MAKE) CC="$(HOSTCC_NOCCACHE)" HOSTCC="$(HOSTCC_NOCCACHE)" obj=$(@D) -C $(CONFIG) -f Makefile.br $(@F)
 
 COMMON_CONFIG_ENV = \
 	KCONFIG_AUTOCONFIG=$(BUILD_DIR)/buildroot-config/auto.conf \
@@ -470,28 +529,19 @@ COMMON_CONFIG_ENV = \
 
 xconfig: $(BUILD_DIR)/buildroot-config/qconf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@if ! $(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN); then \
-		test -f $(CONFIG_DIR)/.config.cmd || rm -f $(CONFIG_DIR)/.config; \
-	fi
+	@$(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN)
 
 gconfig: $(BUILD_DIR)/buildroot-config/gconf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@if ! $(COMMON_CONFIG_ENV) srctree=$(TOPDIR) \
-		$< $(CONFIG_CONFIG_IN); then \
-		test -f $(CONFIG_DIR)/.config.cmd || rm -f $(CONFIG_DIR)/.config; \
-	fi
+	@$(COMMON_CONFIG_ENV) srctree=$(TOPDIR) $< $(CONFIG_CONFIG_IN)
 
 menuconfig: $(BUILD_DIR)/buildroot-config/mconf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@if ! $(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN); then \
-		test -f $(CONFIG_DIR)/.config.cmd || rm -f $(CONFIG_DIR)/.config; \
-	fi
+	@$(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN)
 
 nconfig: $(BUILD_DIR)/buildroot-config/nconf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@if ! $(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN); then \
-		test -f $(CONFIG_DIR)/.config.cmd || rm -f $(CONFIG_DIR)/.config; \
-	fi
+	@$(COMMON_CONFIG_ENV) $< $(CONFIG_CONFIG_IN)
 
 config: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
@@ -551,7 +601,7 @@ defconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 
 savedefconfig: $(BUILD_DIR)/buildroot-config/conf outputmakefile
 	@mkdir -p $(BUILD_DIR)/buildroot-config
-	@$(COMMON_CONFIG_ENV) $< --savedefconfig=$(TOPDIR)/defconfig $(CONFIG_CONFIG_IN)
+	@$(COMMON_CONFIG_ENV) $< --savedefconfig=$(CONFIG_DIR)/defconfig $(CONFIG_CONFIG_IN)
 
 # check if download URLs are outdated
 source-check: allyesconfig
@@ -575,7 +625,8 @@ endif
 
 clean:
 	rm -rf $(STAGING_DIR) $(TARGET_DIR) $(BINARIES_DIR) $(HOST_DIR) \
-		$(STAMP_DIR) $(BUILD_DIR) $(TOOLCHAIN_DIR)
+		$(STAMP_DIR) $(BUILD_DIR) $(TOOLCHAIN_DIR) $(BASE_DIR)/staging \
+		$(TOOLCHAIN_EXTERNAL_DIR)
 
 distclean: clean
 ifeq ($(DL_DIR),$(TOPDIR)/dl)
@@ -584,14 +635,11 @@ endif
 ifeq ($(O),output)
 	rm -rf $(O)
 endif
-	rm -rf $(CONFIG_DIR)/.config $(CONFIG_DIR)/.config.old $(CONFIG_DIR)/.config.cmd $(CONFIG_DIR)/.auto.deps
-
-flush:
-	rm -f $(BUILD_DIR)/tgt-config.cache $(BUILD_DIR)/host-config.cache
+	rm -rf $(CONFIG_DIR)/.config $(CONFIG_DIR)/.config.old $(CONFIG_DIR)/.auto.deps
 
 configured: dirs kernel-headers uclibc-config busybox-config linux26-config
 
-prepatch:	gcc-patched binutils-patched gdb-patched uclibc-patched
+prepatch:	gcc-patched gdb-patched uclibc-patched
 
 cross: $(BASE_TARGETS)
 
@@ -605,11 +653,13 @@ help:
 	@echo
 	@echo 'Configuration:'
 	@echo '  menuconfig             - interactive curses-based configurator'
+	@echo '  nconfig                - interactive ncurses-based configurator'
 	@echo '  xconfig                - interactive Qt-based configurator'
 	@echo '  gconfig                - interactive GTK-based configurator'
 	@echo '  oldconfig              - resolve any unresolved symbols in .config'
 	@echo '  randconfig             - New config with random answer to all options'
 	@echo '  defconfig              - New config with default answer to all options'
+	@echo '  savedefconfig          - Save current config as ./defconfig (minimal config)'
 	@echo '  allyesconfig           - New config where all options are accepted with yes'
 	@echo '  allnoconfig            - New config where all options are answered with no'
 	@echo '  randpackageconfig      - New config with random answer to package options'
@@ -621,7 +671,9 @@ help:
 	@echo '  source                 - download all sources needed for offline-build'
 	@echo '  source-check           - check all packages for valid download URLs'
 	@echo '  external-deps          - list external packages used'
-	@echo '  flush                  - flush configuration cache'
+	@echo
+	@echo '  make V=0|1             - 0 => quiet build (default), 1 => verbose build'
+	@echo '  make O=dir             - Locate all output files in "dir", including .config'
 	@echo
 	@$(foreach b, $(notdir $(wildcard $(TOPDIR)/configs/*_defconfig)), \
 	  printf "  %-35s - Build for %s\\n" $(b) $(b:_defconfig=);)

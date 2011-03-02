@@ -2,11 +2,11 @@
  util.c |  117 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
  1 file changed, 116 insertions(+), 1 deletion(-)
 
-Index: config.clean/util.c
+Index: config/util.c
 ===================================================================
---- config.clean.orig/util.c
-+++ config.clean/util.c
-@@ -26,6 +26,121 @@
+--- config.orig/util.c
++++ config/util.c
+@@ -29,6 +29,121 @@
  	return file;
  }
  
@@ -128,7 +128,7 @@ Index: config.clean/util.c
  /* write a dependency file as used by kbuild to track dependencies */
  int file_write_dep(const char *name)
  {
-@@ -68,7 +183,7 @@
+@@ -71,7 +186,7 @@
  	fprintf(out, "\n$(deps_config): ;\n");
  	fclose(out);
  	rename("..config.tmp", name);

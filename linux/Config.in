@@ -19,10 +19,10 @@ if BR2_LINUX_KERNEL
 #
 choice
 	prompt "Kernel version"
-	default BR2_LINUX_KERNEL_2_6_36
+	default BR2_LINUX_KERNEL_2_6_37
 
-config BR2_LINUX_KERNEL_2_6_36
-	bool "2.6.36"
+config BR2_LINUX_KERNEL_2_6_37
+	bool "2.6.37.2"
 
 config BR2_LINUX_KERNEL_SAME_AS_HEADERS
 	bool "Same as toolchain kernel headers"
@@ -52,7 +52,7 @@ endchoice
 config BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE
 	string "Kernel version"
 	depends on BR2_LINUX_KERNEL_CUSTOM_VERSION
-	default "2.6.36"
+	default "2.6.37.2"
 
 config BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION
 	string "URL of custom kernel tarball"
@@ -60,7 +60,7 @@ config BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION
 
 config BR2_LINUX_KERNEL_VERSION
 	string
-	default "2.6.36" if BR2_LINUX_KERNEL_2_6_36
+	default "2.6.37" if BR2_LINUX_KERNEL_2_6_37
 	default BR2_DEFAULT_KERNEL_HEADERS if BR2_LINUX_KERNEL_SAME_AS_HEADERS
 	default BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE if BR2_LINUX_KERNEL_CUSTOM_VERSION
 	default "custom" if BR2_LINUX_KERNEL_CUSTOM_TARBALL
@@ -70,11 +70,12 @@ config BR2_LINUX_KERNEL_VERSION
 #
 
 config BR2_LINUX_KERNEL_PATCH
-	string "Custom kernel patch"
+	string "Custom kernel patches"
 	help
-         The location can be an URL, a file path, or a directory. In
-         the case of a directory, all files matching linux-*.patch
-         will be applied.
+	  A space-separated list of patches to apply to the
+	  kernel. Each patch can be described as an URL, a local file
+	  path, or a directory. In the case of a directory, all files
+	  matching linux-*.patch in the directory will be applied.
 
 #
 # Configuration selection
@@ -114,7 +115,7 @@ choice
 
 config BR2_LINUX_KERNEL_UIMAGE
 	bool "uImage"
-	depends on BR2_arm || BR2_armeb || BR2_powerpc || BR2_avr32 || BR2_sh || BR2_sh64
+	depends on BR2_arm || BR2_armeb || BR2_bfin || BR2_powerpc || BR2_avr32 || BR2_sh || BR2_sh64
 
 config BR2_LINUX_KERNEL_BZIMAGE
 	bool "bzImage"
@@ -127,6 +128,10 @@ config BR2_LINUX_KERNEL_ZIMAGE
 config BR2_LINUX_KERNEL_VMLINUX_BIN
 	bool "vmlinux.bin"
 	depends on BR2_mips || BR2_mipsel || BR2_sh || BR2_sh64
+
+config BR2_LINUX_KERNEL_VMLINUX
+	bool "vmlinux"
+	depends on BR2_mips || BR2_mipsel
 
 endchoice
 
