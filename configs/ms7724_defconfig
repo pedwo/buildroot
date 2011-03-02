@@ -37,8 +37,8 @@ BR2_ENDIAN="LITTLE"
 #
 # Preset Devices
 #
-BR2_BOARD_NAME="MS7724"
-BR2_BOARD_PATH="target/device/Renesas/$(BR2_BOARD_NAME)"
+BR2_BOARD_NAME="ms7724"
+BR2_BOARD_PATH="target/device/renesas/$(BR2_BOARD_NAME)"
 BR2_TARGET_RENESAS=y
 BR2_TARGET_MS7724=y
 BR2_TARGET_GENERIC_HOSTNAME="buildroot"
@@ -585,7 +585,7 @@ BR2_PACKAGE_ZLIB=y
 # Target filesystem options
 #
 BR2_ROOTFS_POST_BUILD_SCRIPT=""
-BR2_ROOTFS_DEVICE_TABLE="target/device/Renesas/device_table.txt"
+BR2_ROOTFS_DEVICE_TABLE="target/device/renesas/device_table.txt"
 BR2_ROOTFS_SKELETON_DEFAULT=y
 # BR2_ROOTFS_SKELETON_CUSTOM is not set
 # BR2_TARGET_ROOTFS_CRAMFS is not set
