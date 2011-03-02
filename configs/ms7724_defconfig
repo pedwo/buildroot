@@ -1,24 +1,20 @@
 #
 # Automatically generated make config: don't edit
-# Mon Sep  6 12:06:50 2010
+# Buildroot 2011.02-00075-gdcc9ece-dirty Configuration
+# Wed Mar  2 11:37:26 2011
 #
 BR2_HAVE_DOT_CONFIG=y
-BR2_VERSION="2010.08"
-# BR2_alpha is not set
 # BR2_arm is not set
 # BR2_armeb is not set
 # BR2_avr32 is not set
-# BR2_cris is not set
-# BR2_ia64 is not set
+# BR2_bfin is not set
 # BR2_i386 is not set
-# BR2_m68k is not set
 # BR2_mips is not set
 # BR2_mipsel is not set
 # BR2_powerpc is not set
 BR2_sh=y
 # BR2_sh64 is not set
 # BR2_sparc is not set
-# BR2_sparc64 is not set
 # BR2_x86_64 is not set
 # BR2_xtensa is not set
 # BR2_sh2a_nofpueb is not set
@@ -27,63 +23,33 @@ BR2_sh=y
 # BR2_sh3eb is not set
 BR2_sh4=y
 # BR2_sh4eb is not set
+# BR2_x86_i386 is not set
+# BR2_x86_i486 is not set
+# BR2_x86_i586 is not set
+# BR2_x86_i686 is not set
+# BR2_x86_pentiumpro is not set
+# BR2_x86_pentium_mmx is not set
+# BR2_x86_pentium_m is not set
+# BR2_x86_pentium2 is not set
+# BR2_x86_pentium3 is not set
+# BR2_x86_pentium4 is not set
+# BR2_x86_prescott is not set
+# BR2_x86_nocona is not set
+# BR2_x86_core2 is not set
+# BR2_x86_k6 is not set
+# BR2_x86_k6_2 is not set
+# BR2_x86_athlon is not set
+# BR2_x86_athlon_4 is not set
+# BR2_x86_opteron is not set
+# BR2_x86_opteron_sse3 is not set
+# BR2_x86_barcelona is not set
+# BR2_x86_geode is not set
+# BR2_x86_c3 is not set
+# BR2_x86_c32 is not set
+# BR2_x86_winchip_c6 is not set
+# BR2_x86_winchip2 is not set
 BR2_ARCH="sh4"
 BR2_ENDIAN="LITTLE"
-
-#
-# Target options
-#
-
-#
-# Preset Devices
-#
-BR2_BOARD_NAME="ms7724"
-BR2_BOARD_PATH="board/renesas/$(BR2_BOARD_NAME)"
-BR2_TARGET_RENESAS=y
-BR2_TARGET_MS7724=y
-BR2_TARGET_GENERIC_HOSTNAME="buildroot"
-BR2_TARGET_GENERIC_ISSUE="Welcome to Buildroot"
-BR2_TARGET_GENERIC_GETTY=y
-# BR2_TARGET_GENERIC_GETTY_NONE is not set
-# BR2_TARGET_GENERIC_GETTY_TTYS0 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYS1 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYS2 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYS3 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYAMA0 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYAMA1 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYAMA2 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYAMA3 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYSAC0 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYSAC1 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYSAC2 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYSAC3 is not set
-BR2_TARGET_GENERIC_GETTY_TTYSC0=y
-# BR2_TARGET_GENERIC_GETTY_TTYSC1 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYSC2 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYSC3 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYMXC0 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYMXC1 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYMXC2 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYUL0 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYUL1 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYUL2 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYUL3 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYPSC0 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYPSC1 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYPSC2 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYPSC3 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYCPM0 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYCPM1 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYCPM2 is not set
-# BR2_TARGET_GENERIC_GETTY_TTYCPM3 is not set
-BR2_TARGET_GENERIC_GETTY_PORT="ttySC0"
-# BR2_TARGET_GENERIC_GETTY_BAUDRATE_KEEP is not set
-# BR2_TARGET_GENERIC_GETTY_BAUDRATE_9600 is not set
-# BR2_TARGET_GENERIC_GETTY_BAUDRATE_19200 is not set
-# BR2_TARGET_GENERIC_GETTY_BAUDRATE_38400 is not set
-# BR2_TARGET_GENERIC_GETTY_BAUDRATE_57600 is not set
-BR2_TARGET_GENERIC_GETTY_BAUDRATE_115200=y
-BR2_TARGET_GENERIC_GETTY_BAUDRATE="115200"
 
 #
 # Build options
@@ -92,28 +58,27 @@ BR2_TARGET_GENERIC_GETTY_BAUDRATE="115200"
 #
 # Commands
 #
-BR2_WGET="wget --passive-ftp --no-check-certificate -nd"
-BR2_SVN_CO="svn co"
-BR2_SVN_UP="svn up"
-BR2_BZR_CO="bzr co"
-BR2_BZR_UP="bzr up"
-BR2_GIT="git clone"
+BR2_WGET="wget --passive-ftp --passive-ftp -nd -t 3"
+BR2_SVN="svn"
+BR2_BZR="bzr"
+BR2_GIT="git"
 BR2_ZCAT="gzip -d -c"
 BR2_BZCAT="bzcat"
 BR2_TAR_OPTIONS=""
-BR2_DL_DIR="$(BASE_DIR)/dl"
-BR2_STAGING_DIR="$(BUILD_DIR)/staging_dir"
+BR2_DL_DIR="$(TOPDIR)/dl"
+BR2_HOST_DIR="$(BASE_DIR)/host"
 
 #
 # Mirrors and Download locations
 #
 BR2_PRIMARY_SITE=""
-BR2_BACKUP_SITE="http://buildroot.net/downloads/sources/"
-BR2_SOURCEFORGE_MIRROR="easynews"
+BR2_BACKUP_SITE="http://sources.buildroot.net/"
+BR2_SOURCEFORGE_MIRROR="kent"
 BR2_KERNEL_MIRROR="http://www.kernel.org/pub/"
 BR2_GNU_MIRROR="http://ftp.gnu.org/pub/gnu"
 BR2_DEBIAN_MIRROR="http://ftp.debian.org"
 BR2_JLEVEL=2
+# BR2_CCACHE is not set
 # BR2_DEPRECATED is not set
 # BR2_ENABLE_DEBUG is not set
 BR2_STRIP_strip=y
@@ -129,63 +94,83 @@ BR2_OPTIMIZE_S=y
 # BR2_HAVE_DEVFILES is not set
 
 #
-# Advanced
-#
-# BR2_CONFIG_CACHE is not set
-
-#
 # Toolchain
 #
 # BR2_TOOLCHAIN_BUILDROOT is not set
 BR2_TOOLCHAIN_EXTERNAL=y
-# BR2_TOOLCHAIN_EXTERNAL_UCLIBC is not set
+# BR2_TOOLCHAIN_CTNG is not set
+# BR2_KERNEL_HEADERS_2_6_35 is not set
+# BR2_KERNEL_HEADERS_2_6_36 is not set
+# BR2_KERNEL_HEADERS_2_6_37 is not set
+# BR2_KERNEL_HEADERS_VERSION is not set
+# BR2_KERNEL_HEADERS_SNAP is not set
+# BR2_UCLIBC_VERSION_0_9_30 is not set
+# BR2_UCLIBC_VERSION_0_9_31 is not set
+# BR2_UCLIBC_VERSION_0_9_32 is not set
+# BR2_UCLIBC_VERSION_SNAPSHOT is not set
+# BR2_BINUTILS_VERSION_2_20 is not set
+# BR2_BINUTILS_VERSION_2_20_1 is not set
+# BR2_BINUTILS_VERSION_2_21 is not set
+# BR2_GCC_VERSION_4_2_4 is not set
+# BR2_GCC_VERSION_4_3_X is not set
+# BR2_GCC_VERSION_4_4_X is not set
+# BR2_GCC_VERSION_4_5_X is not set
+# BR2_GCC_VERSION_SNAP is not set
+# BR2_TOOLCHAIN_EXTERNAL_CODESOURCERY_SH201009 is not set
+BR2_TOOLCHAIN_EXTERNAL_CUSTOM=y
+BR2_TOOLCHAIN_EXTERNAL_PATH="/usr/share/renesas-4.4"
+BR2_TOOLCHAIN_EXTERNAL_CUSTOM_PREFIX="sh-linux-gnu"
+BR2_TOOLCHAIN_EXTERNAL_PREFIX="sh-linux-gnu"
 BR2_TOOLCHAIN_EXTERNAL_GLIBC=y
-BR2_TOOLCHAIN_EXTERNAL_STRIP=y
+# BR2_TOOLCHAIN_EXTERNAL_CUSTOM_UCLIBC is not set
+BR2_TOOLCHAIN_EXTERNAL_CUSTOM_GLIBC=y
+BR2_TOOLCHAIN_EXTERNAL_CXX=y
 
 #
 # Gdb Options
 #
 # BR2_PACKAGE_GDB is not set
-
-#
-# Gdb debugger for the target needs WCHAR support in toolchain
-#
 # BR2_PACKAGE_GDB_SERVER is not set
-
-#
-# Common Toolchain Options
-#
 BR2_LARGEFILE=y
 BR2_INET_IPV6=y
 BR2_INET_RPC=y
-BR2_ENABLE_LOCALE=y
-# BR2_ENABLE_LOCALE_PURGE is not set
 BR2_USE_WCHAR=y
-# BR2_USE_SSP is not set
+BR2_ENABLE_LOCALE=y
+BR2_PROGRAM_INVOCATION=y
+BR2_INSTALL_LIBSTDCPP=y
+BR2_TOOLCHAIN_HAS_THREADS=y
+# BR2_ENABLE_LOCALE_PURGE is not set
+BR2_USE_MMU=y
+BR2_TARGET_OPTIMIZATION="-pipe"
 # BR2_PTHREADS_NONE is not set
 # BR2_PTHREADS is not set
-BR2_PTHREADS_OLD=y
-# BR2_PTHREADS_NATIVE is not set
-BR2_PROGRAM_INVOCATION=y
-BR2_GCC_CROSS_CXX=y
-BR2_INSTALL_LIBSTDCPP=y
-BR2_TARGET_OPTIMIZATION="-pipe"
-BR2_TOOLCHAIN_EXTERNAL_PATH="/usr/share/renesas-4.4"
-BR2_TOOLCHAIN_EXTERNAL_PREFIX="sh-linux-gnu"
+# BR2_PTHREADS_OLD is not set
+
+#
+# System configuration
+#
+BR2_TARGET_GENERIC_HOSTNAME="buildroot"
+BR2_TARGET_GENERIC_ISSUE="Welcome to Buildroot"
+BR2_TARGET_GENERIC_GETTY=y
+BR2_TARGET_GENERIC_GETTY_PORT="ttySC0"
+# BR2_TARGET_GENERIC_GETTY_BAUDRATE_KEEP is not set
+# BR2_TARGET_GENERIC_GETTY_BAUDRATE_9600 is not set
+# BR2_TARGET_GENERIC_GETTY_BAUDRATE_19200 is not set
+# BR2_TARGET_GENERIC_GETTY_BAUDRATE_38400 is not set
+# BR2_TARGET_GENERIC_GETTY_BAUDRATE_57600 is not set
+BR2_TARGET_GENERIC_GETTY_BAUDRATE_115200=y
+BR2_TARGET_GENERIC_GETTY_BAUDRATE="115200"
 
 #
 # Package Selection for the target
 #
 BR2_PACKAGE_BUSYBOX=y
-# BR2_BUSYBOX_VERSION_1_13_X is not set
-# BR2_BUSYBOX_VERSION_1_14_X is not set
-# BR2_BUSYBOX_VERSION_1_15_X is not set
-BR2_BUSYBOX_VERSION_1_16_X=y
+# BR2_BUSYBOX_VERSION_1_16_X is not set
 # BR2_BUSYBOX_VERSION_1_17_X is not set
+BR2_BUSYBOX_VERSION_1_18_X=y
 # BR2_PACKAGE_BUSYBOX_SNAPSHOT is not set
-BR2_BUSYBOX_VERSION="1.16.2"
-BR2_PACKAGE_BUSYBOX_FULLINSTALL=y
-BR2_PACKAGE_BUSYBOX_CONFIG="package/busybox/busybox-1.13.x.config"
+BR2_BUSYBOX_VERSION="1.18.3"
+BR2_PACKAGE_BUSYBOX_CONFIG="package/busybox/busybox-1.18.x.config"
 # BR2_PACKAGE_BUSYBOX_SHOW_OTHERS is not set
 # BR2_PACKAGE_CUSTOMIZE is not set
 
@@ -193,48 +178,64 @@ BR2_PACKAGE_BUSYBOX_CONFIG="package/busybox/busybox-1.13.x.config"
 # Audio and video libraries and applications
 #
 # BR2_PACKAGE_ALSA_LIB is not set
+# BR2_PACKAGE_ALSA_UTILS is not set
 # BR2_PACKAGE_AUMIX is not set
+# BR2_PACKAGE_FAAD2 is not set
 # BR2_PACKAGE_FLAC is not set
 # BR2_PACKAGE_FFMPEG is not set
 # BR2_PACKAGE_GSTREAMER is not set
+# BR2_PACKAGE_LAME is not set
+# BR2_PACKAGE_LIBAO is not set
 # BR2_PACKAGE_LIBCDAUDIO is not set
+# BR2_PACKAGE_LIBCUE is not set
+# BR2_PACKAGE_LIBCUEFILE is not set
 # BR2_PACKAGE_LIBDVDREAD is not set
 # BR2_PACKAGE_LIBDVDNAV is not set
 # BR2_PACKAGE_LIBID3TAG is not set
 # BR2_PACKAGE_LIBMAD is not set
 # BR2_PACKAGE_LIBMMS is not set
 # BR2_PACKAGE_LIBMPD is not set
+# BR2_PACKAGE_LIBMPEG2 is not set
 # BR2_PACKAGE_LIBOGG is not set
+# BR2_PACKAGE_LIBREPLAYGAIN is not set
+# BR2_PACKAGE_LIBSAMPLERATE is not set
 # BR2_PACKAGE_LIBSNDFILE is not set
 # BR2_PACKAGE_LIBTHEORA is not set
 # BR2_PACKAGE_LIBVORBIS is not set
 # BR2_PACKAGE_MADPLAY is not set
+# BR2_PACKAGE_MPD is not set
 # BR2_PACKAGE_MPG123 is not set
 # BR2_PACKAGE_MPLAYER is not set
+# BR2_PACKAGE_MUSEPACK is not set
 # BR2_PACKAGE_SPEEX is not set
 # BR2_PACKAGE_SWFDEC is not set
-# BR2_PACKAGE_FESTIVAL is not set
 # BR2_PACKAGE_TAGLIB is not set
 # BR2_PACKAGE_TREMOR is not set
 # BR2_PACKAGE_FAAC is not set
-# BR2_PACKAGE_FAAD is not set
+# BR2_PACKAGE_OMXIL_BELLAGIO is not set
+# BR2_PACKAGE_VORBIS_TOOLS is not set
+# BR2_PACKAGE_WAVPACK is not set
 
 #
 # Compressors and decompressors
 #
+# BR2_PACKAGE_BZIP2 is not set
 # BR2_PACKAGE_LZOP is not set
-# BR2_PACKAGE_LZMA is not set
+# BR2_PACKAGE_XZ is not set
 
 #
 # Debugging, profiling and benchmark
 #
+# BR2_PACKAGE_DHRYSTONE is not set
 # BR2_PACKAGE_DMALLOC is not set
 # BR2_PACKAGE_KEXEC is not set
 # BR2_PACKAGE_LMBENCH is not set
 # BR2_PACKAGE_LSOF is not set
+# BR2_PACKAGE_LTP_TESTSUITE is not set
 # BR2_PACKAGE_MEMSTAT is not set
 # BR2_PACKAGE_NETPERF is not set
 # BR2_PACKAGE_STRACE is not set
+# BR2_PACKAGE_WHETSTONE is not set
 
 #
 # Development tools
@@ -243,6 +244,7 @@ BR2_PACKAGE_BUSYBOX_CONFIG="package/busybox/busybox-1.13.x.config"
 # BR2_PACKAGE_AUTOMAKE is not set
 # BR2_PACKAGE_BISON is not set
 # BR2_PACKAGE_BSDIFF is not set
+# BR2_PACKAGE_CCACHE is not set
 # BR2_PACKAGE_CVS is not set
 # BR2_PACKAGE_DISTCC is not set
 # BR2_PACKAGE_FAKEROOT is not set
@@ -251,13 +253,15 @@ BR2_PACKAGE_BUSYBOX_CONFIG="package/busybox/busybox-1.13.x.config"
 #
 # native toolchain needs development files in target filesystem
 #
-# BR2_PACKAGE_LIBGMP is not set
+# BR2_PACKAGE_GMP is not set
 # BR2_PACKAGE_GPERF is not set
 # BR2_PACKAGE_MAKE is not set
-# BR2_PACKAGE_LIBMPFR is not set
+# BR2_PACKAGE_MPC is not set
+# BR2_PACKAGE_MPFR is not set
 # BR2_PACKAGE_LIBTOOL is not set
 # BR2_PACKAGE_M4 is not set
 # BR2_PACKAGE_PKG_CONFIG is not set
+# BR2_PACKAGE_SSTRIP is not set
 
 #
 # Games
@@ -322,13 +326,17 @@ BR2_PACKAGE_BUSYBOX_CONFIG="package/busybox/busybox-1.13.x.config"
 # BR2_PACKAGE_GADGETFS_TEST is not set
 # BR2_PACKAGE_GENEXT2FS is not set
 # BR2_PACKAGE_GENROMFS is not set
+# BR2_PACKAGE_GPSD is not set
 # BR2_PACKAGE_GVFS is not set
 # BR2_PACKAGE_HAL is not set
 # BR2_PACKAGE_HWDATA is not set
 # BR2_PACKAGE_I2C_TOOLS is not set
 # BR2_PACKAGE_INPUT_TOOLS is not set
 # BR2_PACKAGE_IOSTAT is not set
+# BR2_PACKAGE_IRDA_UTILS is not set
+# BR2_PACKAGE_KBD is not set
 # BR2_PACKAGE_LM_SENSORS is not set
+# BR2_PACKAGE_LSUIO is not set
 # BR2_PACKAGE_LVM2 is not set
 # BR2_PACKAGE_MAKEDEVS is not set
 # BR2_PACKAGE_MDADM is not set
@@ -337,10 +345,14 @@ BR2_PACKAGE_BUSYBOX_CONFIG="package/busybox/busybox-1.13.x.config"
 # BR2_PACKAGE_NTFS_3G is not set
 # BR2_PACKAGE_NTFSPROGS is not set
 # BR2_PACKAGE_PCIUTILS is not set
+# BR2_PACKAGE_RNG_TOOLS is not set
+# BR2_PACKAGE_SDPARM is not set
 # BR2_PACKAGE_SETSERIAL is not set
 # BR2_PACKAGE_SMARTMONTOOLS is not set
 # BR2_PACKAGE_SQUASHFS is not set
+# BR2_PACKAGE_SSHFS is not set
 # BR2_PACKAGE_SYSSTAT is not set
+# BR2_PACKAGE_UDEV is not set
 # BR2_PACKAGE_USB_MODESWITCH is not set
 # BR2_PACKAGE_USBMOUNT is not set
 # BR2_PACKAGE_USBUTILS is not set
@@ -367,7 +379,7 @@ BR2_PACKAGE_BUSYBOX_CONFIG="package/busybox/busybox-1.13.x.config"
 #
 # BR2_PACKAGE_LIBARCHIVE is not set
 # BR2_PACKAGE_LZO is not set
-BR2_PACKAGE_ZLIB=y
+# BR2_PACKAGE_ZLIB is not set
 
 #
 # Crypto
@@ -403,6 +415,7 @@ BR2_PACKAGE_ZLIB=y
 # BR2_PACKAGE_FREETYPE is not set
 # BR2_PACKAGE_JPEG is not set
 # BR2_PACKAGE_LIBART is not set
+# BR2_PACKAGE_GDK_PIXBUF is not set
 # BR2_PACKAGE_LIBPNG is not set
 # BR2_PACKAGE_LIBSVGTINY is not set
 # BR2_PACKAGE_LIBUNGIF is not set
@@ -420,6 +433,7 @@ BR2_PACKAGE_ZLIB=y
 # BR2_PACKAGE_LIBAIO is not set
 # BR2_PACKAGE_LIBRAW1394 is not set
 # BR2_PACKAGE_TSLIB is not set
+# BR2_PACKAGE_LIBHID is not set
 # BR2_PACKAGE_LIBUSB is not set
 
 #
@@ -443,13 +457,16 @@ BR2_PACKAGE_ZLIB=y
 #
 # Other
 #
+# BR2_PACKAGE_ARGP_STANDALONE is not set
 # BR2_PACKAGE_LIBATOMIC_OPS is not set
 # BR2_PACKAGE_LIBCAP is not set
 # BR2_PACKAGE_LIBDAEMON is not set
 # BR2_PACKAGE_LIBELF is not set
 # BR2_PACKAGE_LIBEVENT is not set
+# BR2_PACKAGE_LIBFFI is not set
 # BR2_PACKAGE_LIBGLIB2 is not set
 # BR2_PACKAGE_LIBOIL is not set
+# BR2_PACKAGE_LIBSIGC is not set
 
 #
 # Text and terminal handling
@@ -499,10 +516,10 @@ BR2_PACKAGE_ZLIB=y
 # BR2_PACKAGE_IPTABLES is not set
 # BR2_PACKAGE_IW is not set
 # BR2_PACKAGE_KISMET is not set
-# BR2_PACKAGE_L2TP is not set
+# BR2_PACKAGE_XL2TP is not set
 # BR2_PACKAGE_LINKS is not set
 # BR2_PACKAGE_LRZSZ is not set
-# BR2_PACKAGE_MIIDIAG is not set
+# BR2_PACKAGE_MII_DIAG is not set
 # BR2_PACKAGE_MROUTED is not set
 # BR2_PACKAGE_MUTT is not set
 # BR2_PACKAGE_NBD is not set
@@ -512,6 +529,7 @@ BR2_PACKAGE_ZLIB=y
 # BR2_PACKAGE_NETSTAT_NAT is not set
 # BR2_PACKAGE_NFS_UTILS is not set
 # BR2_PACKAGE_NTP is not set
+# BR2_PACKAGE_NUTTCP is not set
 # BR2_PACKAGE_OLSR is not set
 # BR2_PACKAGE_OPENNTPD is not set
 # BR2_PACKAGE_OPENSSH is not set
@@ -522,6 +540,7 @@ BR2_PACKAGE_ZLIB=y
 # BR2_PACKAGE_PPTP_LINUX is not set
 # BR2_PACKAGE_PROFTPD is not set
 # BR2_PACKAGE_QUAGGA is not set
+# BR2_PACKAGE_RSH_REDONE is not set
 # BR2_PACKAGE_RSYNC is not set
 # BR2_PACKAGE_SAMBA is not set
 # BR2_PACKAGE_SER2NET is not set
@@ -537,7 +556,6 @@ BR2_PACKAGE_ZLIB=y
 # BR2_PACKAGE_VPNC is not set
 # BR2_PACKAGE_VSFTPD is not set
 # BR2_PACKAGE_VTUN is not set
-# BR2_PACKAGE_WEBIF is not set
 # BR2_PACKAGE_WIRELESS_TOOLS is not set
 # BR2_PACKAGE_WPA_SUPPLICANT is not set
 
@@ -554,6 +572,7 @@ BR2_PACKAGE_ZLIB=y
 # BR2_PACKAGE_SHBEU is not set
 # BR2_PACKAGE_SHCODECS is not set
 # BR2_PACKAGE_SHJPEG is not set
+# BR2_PACKAGE_OMXIL_SH is not set
 # BR2_PACKAGE_SIGHTTPD is not set
 # BR2_PACKAGE_GST_SH_MOBILE is not set
 # BR2_PACKAGE_GST_SHRTSP is not set
@@ -569,6 +588,7 @@ BR2_PACKAGE_ZLIB=y
 # BR2_PACKAGE_SCREEN is not set
 # BR2_PACKAGE_SUDO is not set
 # BR2_PACKAGE_WHICH is not set
+# BR2_PACKAGE_XMLSTARLET is not set
 
 #
 # System tools
@@ -590,15 +610,7 @@ BR2_ROOTFS_SKELETON_DEFAULT=y
 # BR2_ROOTFS_SKELETON_CUSTOM is not set
 # BR2_TARGET_ROOTFS_CRAMFS is not set
 # BR2_TARGET_ROOTFS_CLOOP is not set
-BR2_TARGET_ROOTFS_EXT2=y
-BR2_TARGET_ROOTFS_EXT2_BLOCKS=0
-BR2_TARGET_ROOTFS_EXT2_INODES=0
-BR2_TARGET_ROOTFS_EXT2_RESBLKS=0
-BR2_TARGET_ROOTFS_EXT2_SQUASH=y
-BR2_TARGET_ROOTFS_EXT2_NONE=y
-# BR2_TARGET_ROOTFS_EXT2_GZIP is not set
-# BR2_TARGET_ROOTFS_EXT2_BZIP2 is not set
-# BR2_TARGET_ROOTFS_EXT2_LZMA is not set
+# BR2_TARGET_ROOTFS_EXT2 is not set
 # BR2_TARGET_ROOTFS_JFFS2 is not set
 # BR2_TARGET_ROOTFS_UBIFS is not set
 # BR2_TARGET_ROOTFS_SQUASHFS is not set
@@ -613,15 +625,14 @@ BR2_TARGET_ROOTFS_EXT2_NONE=y
 # BR2_TARGET_BAREBOX is not set
 BR2_TARGET_UBOOT=y
 BR2_TARGET_UBOOT_BOARDNAME="ecovec"
+# BR2_TARGET_UBOOT_2010_12 is not set
+# BR2_TARGET_UBOOT_2010_09 is not set
 # BR2_TARGET_UBOOT_2010_06 is not set
 BR2_TARGET_UBOOT_2010_03=y
-# BR2_TARGET_UBOOT_2009_11 is not set
-# BR2_TARGET_UBOOT_2009_08 is not set
 # BR2_TARGET_UBOOT_CUSTOM_TARBALL is not set
 BR2_TARGET_UBOOT_VERSION="2010.03"
 BR2_TARGET_UBOOT_CUSTOM_PATCH_DIR=""
 BR2_TARGET_UBOOT_FORMAT_BIN=y
-# BR2_TARGET_UBOOT_FORMAT_KWB is not set
 # BR2_TARGET_UBOOT_TOOL_MKIMAGE is not set
 # BR2_TARGET_UBOOT_TOOL_ENV is not set
 # BR2_TARGET_UBOOT_NETWORK is not set
@@ -636,11 +647,10 @@ BR2_LINUX_KERNEL_CUSTOM_VERSION=y
 # BR2_LINUX_KERNEL_CUSTOM_TARBALL is not set
 BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="2.6.35"
 BR2_LINUX_KERNEL_VERSION="2.6.35"
-BR2_LINUX_KERNEL_PATCH="$(BR2_BOARD_PATH)/kernel-patches"
+BR2_LINUX_KERNEL_PATCH="board/renesas/ms7724/kernel-patches"
 # BR2_LINUX_KERNEL_USE_DEFCONFIG is not set
 BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG=y
-BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE="$(BR2_BOARD_PATH)/$(BR2_BOARD_NAME)-linux-$(BR2_LINUX_KERNEL_VERSION).config"
+BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE="board/renesas/ms7724/linux-$(BR2_LINUX_KERNEL_VERSION).config"
 BR2_LINUX_KERNEL_UIMAGE=y
-# BR2_LINUX_KERNEL_BZIMAGE is not set
 # BR2_LINUX_KERNEL_ZIMAGE is not set
-# BR2_LINUX_KERNEL_VMLINUX is not set
+# BR2_LINUX_KERNEL_VMLINUX_BIN is not set
