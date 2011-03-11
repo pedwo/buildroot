@@ -1,6 +1,6 @@
 BR2_arm=y
 BR2_cortex_a8=y
-BR2_WGET="wget --passive-ftp --passive-ftp -nd -t 3"
+BR2_WGET="wget --passive-ftp --no-check-certificate -nd -t 3"
 BR2_TOOLCHAIN_EXTERNAL=y
 BR2_TOOLCHAIN_EXTERNAL_CUSTOM=y
 BR2_TOOLCHAIN_EXTERNAL_PATH="/usr/share/arm-2010.09"
