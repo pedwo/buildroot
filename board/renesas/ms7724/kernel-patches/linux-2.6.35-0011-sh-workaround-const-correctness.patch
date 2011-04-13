@@ -1,0 +1,14 @@
+diff -ruNp a/arch/sh/include/asm/syscalls_32.h b/arch/sh/include/asm/syscalls_32.h
+--- a/arch/sh/include/asm/syscalls_32.h	2011-03-31 19:58:56.000000000 +0100
++++ b/arch/sh/include/asm/syscalls_32.h	2011-04-13 14:00:38.521890718 +0100
+@@ -19,8 +19,8 @@ asmlinkage int sys_clone(unsigned long c
+ asmlinkage int sys_vfork(unsigned long r4, unsigned long r5,
+ 			 unsigned long r6, unsigned long r7,
+ 			 struct pt_regs __regs);
+-asmlinkage int sys_execve(char __user *ufilename, const char __user * __user *uargv,
+-			  const char __user * __user *uenvp, unsigned long r7,
++asmlinkage int sys_execve(char __user *ufilename, char __user * __user *uargv,
++			  char __user * __user *uenvp, unsigned long r7,
+ 			  struct pt_regs __regs);
+ asmlinkage int sys_sigsuspend(old_sigset_t mask, unsigned long r5,
+ 			      unsigned long r6, unsigned long r7,
