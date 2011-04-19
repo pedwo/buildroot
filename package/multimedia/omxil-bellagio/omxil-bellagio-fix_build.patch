@@ -1,6 +1,6 @@
-diff -ruN libomxil-bellagio-0.9.2.1-orig/src/omxregister.c libomxil-bellagio-0.9.2.1/src/omxregister.c
---- libomxil-bellagio-0.9.2.1-orig/src/omxregister.c	2009-12-21 10:36:21.000000000 +0000
-+++ libomxil-bellagio-0.9.2.1/src/omxregister.c	2010-12-21 11:02:03.561320984 +0000
+diff -ruN a/src/omxregister.c b/src/omxregister.c
+--- a/src/omxregister.c	2009-12-21 10:36:21.000000000 +0000
++++ b/src/omxregister.c	2010-12-21 11:02:03.561320984 +0000
 @@ -85,7 +85,7 @@
  	int currentgiven;
  	int index;

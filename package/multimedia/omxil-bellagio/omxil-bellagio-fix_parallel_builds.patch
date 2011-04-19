@@ -1,0 +1,13 @@
+diff -ruN a/src/Makefile.am b/src/Makefile.am
+--- a/src/Makefile.am	2011-04-19 15:22:20.064929243 +0100
++++ b/src/Makefile.am	2011-04-19 15:22:37.448838536 +0100
+@@ -6,7 +6,8 @@ bin_PROGRAMS = omxregister-bellagio
+ omxregister_bellagio_SOURCES = omxregister.c common.c common.h
+ omxregister_bellagio_CFLAGS = -DOMXILCOMPONENTSPATH=\"$(plugindir)/\" \
+ 			      -I$(top_srcdir)/include
+-omxregister_bellagio_LDFLAGS = -L$(builddir) -lomxil-bellagio
++omxregister_bellagio_LDFLAGS = -L$(builddir)
++omxregister_bellagio_LDADD = libomxil-bellagio.la
+ 
+ lib_LTLIBRARIES = libomxil-bellagio.la
+ libomxil_bellagio_la_SOURCES = component_loader.h \
