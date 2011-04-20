@@ -11,6 +11,10 @@ OMXIL_SH_AUTORECONF = YES
 OMXIL_SH_INSTALL_STAGING = YES
 OMXIL_SH_INSTALL_TARGET = YES
 
-OMXIL_SH_DEPENDENCIES = host-pkg-config uiomux shcodecs omxil-bellagio
+OMXIL_SH_DEPENDENCIES = host-pkg-config uiomux omxil-bellagio
+
+ifeq ($(BR2_sh),y)
+	OMXIL_SH_DEPENDENCIES += shcodecs
+endif
 
 $(eval $(call AUTOTARGETS,package,omxil-sh))

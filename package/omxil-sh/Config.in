@@ -1,7 +1,8 @@
 config BR2_PACKAGE_OMXIL_SH
 	bool "omxil-sh"
 	select BR2_PACKAGE_UIOMUX
-	select BR2_PACKAGE_SHCODECS
+	select BR2_PACKAGE_SHCODECS if BR2_sh
+
 	select BR2_PACKAGE_OMXIL_BELLAGIO
 	help
 	  libshveu: A collection of OpenMAX IL components for SH-Mobile.
