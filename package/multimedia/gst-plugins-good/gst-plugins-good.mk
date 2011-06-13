@@ -24,7 +24,8 @@ GST_PLUGINS_GOOD_CONF_OPT = \
 		--disable-shout2 \
 		--disable-shout2test
 
-GST_PLUGINS_GOOD_DEPENDENCIES = gstreamer gst-plugins-base
+GST_PLUGINS_GOOD_AUTORECONF = YES
+GST_PLUGINS_GOOD_DEPENDENCIES = gstreamer gst-plugins-base uiomux
 
 ifeq ($(BR2_PACKAGE_GST_PLUGINS_GOOD_JPEG),y)
 GST_PLUGINS_GOOD_CONF_OPT += --enable-jpeg

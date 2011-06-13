@@ -1,0 +1,220 @@
+diff -ruNp a/configure.ac b/configure.ac
+--- a/configure.ac	2011-01-21 10:15:52.000000000 +0000
++++ b/configure.ac	2011-06-13 09:08:16.811760620 +0100
+@@ -531,6 +531,9 @@ return 0;
+       fi
+     ])
+ 
++  dnl Check for libuiomux
++  PKG_CHECK_MODULES(UIOMUX, uiomux >= 1.6.0)
++
+   if [ test x$HAVE_GST_V4L2 = xyes ]; then
+     dnl check for missing v4l2_buffer declaration (see #135919)
+     MISSING_DECL=0
+diff -ruNp a/sys/v4l2/gstv4l2bufferpool.c b/sys/v4l2/gstv4l2bufferpool.c
+--- a/sys/v4l2/gstv4l2bufferpool.c	2011-01-12 22:37:15.000000000 +0000
++++ b/sys/v4l2/gstv4l2bufferpool.c	2011-06-13 09:23:32.308812215 +0100
+@@ -29,6 +29,7 @@
+ #include <sys/mman.h>
+ #include <string.h>
+ #include <unistd.h>
++#include <uiomux/uiomux.h>
+ 
+ #include "gst/video/video.h"
+ 
+@@ -48,10 +49,10 @@
+ #define V4L2_FIELD_INTERLACED_BT 9
+ #endif
+ 
+-
+ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
+ #define GST_CAT_DEFAULT v4l2_debug
+ 
++static GstV4l2Object *get_v4l2_object (GstElement * v4l2elem);
+ 
+ /*
+  * GstV4l2Buffer:
+@@ -219,6 +220,65 @@ mmap_failed:
+   }
+ }
+ 
++/* Renesas specific USERPTR buffer allocation via UIOMux */
++static GstV4l2Buffer *
++gst_v4l2_buffer_new_userptr (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
++{
++  GstV4l2Buffer *ret;
++  guint8 *data;
++  gint w = 0, h = 0;
++  gboolean interlaced;
++  struct v4l2_fmtdesc *format;
++  guint fps_n, fps_d;
++  guint size;
++  GstV4l2Object *v4l2object = get_v4l2_object(pool->v4l2elem);
++
++  ret = (GstV4l2Buffer *) gst_mini_object_new (GST_TYPE_V4L2_BUFFER);
++
++  GST_LOG_OBJECT (pool->v4l2elem, "creating buffer %u, %p in pool %p", index, ret, pool);
++
++  ret->pool = (GstV4l2BufferPool *) gst_mini_object_ref (GST_MINI_OBJECT (pool));
++
++  /* Calculate size of buffer from the caps */
++  if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &format, &w, &h,
++          &interlaced, &fps_n, &fps_d, &size)) {
++    GST_DEBUG_OBJECT (pool->v4l2elem,
++        "can't get capture format from caps %" GST_PTR_FORMAT, caps);
++    return NULL;
++  }
++
++  GST_LOG ("trying to allocate buffer (%dx%d), size=%u", w, h, size);
++
++  /* Get user memory from UIO */
++  data = uiomux_malloc(v4l2object->uiomux, UIOMUX_SH_VEU, size, getpagesize());
++  if (data == NULL)
++    goto uio_failed;
++
++  ret->vbuffer.index = index;
++  ret->vbuffer.type = pool->type;
++  ret->vbuffer.length = size;
++  ret->vbuffer.memory = V4L2_MEMORY_USERPTR;
++  ret->vbuffer.m.userptr = (unsigned long)data;
++
++  GST_BUFFER_DATA (ret) = data;
++  GST_BUFFER_SIZE (ret) = ret->vbuffer.length;
++
++  gst_buffer_set_caps (GST_BUFFER (ret), caps);
++
++  return ret;
++
++  /* ERRORS */
++uio_failed:
++  {
++    gint errnosave = errno;
++
++    GST_WARNING ("Failed to allocate UIO buffer: %s", g_strerror (errnosave));
++    gst_buffer_unref (GST_BUFFER (ret));
++    errno = errnosave;
++    return NULL;
++  }
++}
++
+ 
+ /*
+  * GstV4l2BufferPool:
+@@ -349,7 +409,8 @@ gst_v4l2_buffer_pool_new (GstElement * v
+   memset (&breq, 0, sizeof (struct v4l2_requestbuffers));
+   breq.type = type;
+   breq.count = num_buffers;
+-  breq.memory = V4L2_MEMORY_MMAP;
++//  breq.memory = V4L2_MEMORY_MMAP;
++  breq.memory = V4L2_MEMORY_USERPTR;
+ 
+   if (v4l2_ioctl (fd, VIDIOC_REQBUFS, &breq) < 0)
+     goto reqbufs_failed;
+@@ -369,13 +430,18 @@ gst_v4l2_buffer_pool_new (GstElement * v
+   pool->v4l2elem = v4l2elem;
+   pool->requeuebuf = requeuebuf;
+   pool->type = type;
++  pool->memory = breq.memory;
+   pool->buffer_count = num_buffers;
+   pool->buffers = g_new0 (GstV4l2Buffer *, num_buffers);
+   pool->avail_buffers = g_async_queue_new ();
+ 
+   /* now, map the buffers: */
+   for (n = 0; n < num_buffers; n++) {
+-    pool->buffers[n] = gst_v4l2_buffer_new (pool, n, caps);
++    if (pool->memory == V4L2_MEMORY_MMAP)
++      pool->buffers[n] = gst_v4l2_buffer_new (pool, n, caps);
++    else
++      pool->buffers[n] = gst_v4l2_buffer_new_userptr (pool, n, caps);
++
+     if (!pool->buffers[n])
+       goto buffer_new_failed;
+     pool->num_live_buffers++;
+@@ -539,8 +605,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2Buffe
+ 
+   memset (&buffer, 0x00, sizeof (buffer));
+   buffer.type = pool->type;
+-  buffer.memory = V4L2_MEMORY_MMAP;
+-
++  buffer.memory = pool->memory;
+ 
+   if (v4l2_ioctl (pool->video_fd, VIDIOC_DQBUF, &buffer) >= 0) {
+ 
+diff -ruNp a/sys/v4l2/gstv4l2bufferpool.h b/sys/v4l2/gstv4l2bufferpool.h
+--- a/sys/v4l2/gstv4l2bufferpool.h	2010-12-29 22:40:54.000000000 +0000
++++ b/sys/v4l2/gstv4l2bufferpool.h	2011-06-13 08:51:07.432450672 +0100
+@@ -56,6 +56,7 @@ struct _GstV4l2BufferPool
+   GstElement *v4l2elem;      /* the v4l2 src/sink that owns us.. maybe we should be owned by v4l2object? */
+   gboolean requeuebuf;       /* if true, unusued buffers are automatically re-QBUF'd */
+   enum v4l2_buf_type type;   /* V4L2_BUF_TYPE_VIDEO_CAPTURE, V4L2_BUF_TYPE_VIDEO_OUTPUT */
++  enum v4l2_memory memory;   /* V4L2_MEMORY_MMAP, V4L2_MEMORY_USERPTR */
+ 
+   GMutex *lock;
+   gboolean running;          /* with lock */
+diff -ruNp a/sys/v4l2/gstv4l2object.c b/sys/v4l2/gstv4l2object.c
+--- a/sys/v4l2/gstv4l2object.c	2011-01-12 22:40:29.000000000 +0000
++++ b/sys/v4l2/gstv4l2object.c	2011-06-13 10:09:40.792751168 +0100
+@@ -27,6 +27,7 @@
+ #include <errno.h>
+ #include <unistd.h>
+ #include <string.h>
++#include <uiomux/uiomux.h>
+ 
+ #ifdef HAVE_GUDEV
+ #include <gudev/gudev.h>
+@@ -420,6 +421,11 @@ gst_v4l2_object_new (GstElement * elemen
+ 
+   v4l2object->xwindow_id = 0;
+ 
++  v4l2object->uiomux = uiomux_open();
++  if (v4l2object->uiomux == NULL) {
++    GST_ERROR("Can't open UIOMux");
++  }
++
+   return v4l2object;
+ }
+ 
+diff -ruNp a/sys/v4l2/gstv4l2object.h b/sys/v4l2/gstv4l2object.h
+--- a/sys/v4l2/gstv4l2object.h	2011-01-02 11:40:28.000000000 +0000
++++ b/sys/v4l2/gstv4l2object.h	2011-06-13 08:51:07.444249633 +0100
+@@ -46,6 +46,7 @@
+ #else
+ #include <sys/videodev2.h>
+ #endif
++#include <uiomux/uiomux.h>
+ 
+ #include <gst/gst.h>
+ #include <gst/base/gstpushsrc.h>
+@@ -120,6 +121,9 @@ struct _GstV4l2Object {
+   GstV4l2GetInOutFunction  get_in_out_func;
+   GstV4l2SetInOutFunction  set_in_out_func;
+   GstV4l2UpdateFpsFunction update_fps_func;
++
++  /* Renesas specific */
++  UIOMux *uiomux;
+ };
+ 
+ struct _GstV4l2ObjectClassHelper {
+diff -ruNp a/sys/v4l2/Makefile.am b/sys/v4l2/Makefile.am
+--- a/sys/v4l2/Makefile.am	2011-01-02 11:40:29.000000000 +0000
++++ b/sys/v4l2/Makefile.am	2011-06-13 09:36:24.783599626 +0100
+@@ -29,7 +29,8 @@ libgstvideo4linux2_la_CFLAGS =   $(GST_P
+ 				 $(GST_CFLAGS) \
+ 				 $(X_CFLAGS) \
+ 				 $(LIBV4L2_CFLAGS) \
+-				 $(GUDEV_CFLAGS)
++				 $(GUDEV_CFLAGS) \
++				 $(UIOMUX_CFLAGS)
+ 
+ libgstvideo4linux2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+ libgstvideo4linux2_la_LIBTOOLFLAGS = --tag=disable-static
+@@ -43,7 +44,8 @@ libgstvideo4linux2_la_LIBADD =   $(GST_P
+ 				 $(GST_LIBS) \
+ 				 $(xv_libs) \
+ 				 $(LIBV4L2_LIBS) \
+-				 $(GUDEV_LIBS)
++				 $(GUDEV_LIBS) \
++				 $(UIOMUX_LIBS)
+ 
+ noinst_HEADERS = \
+ 	gstv4l2bufferpool.h \
