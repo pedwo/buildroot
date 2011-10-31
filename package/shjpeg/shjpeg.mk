@@ -11,6 +11,6 @@ SHJPEG_AUTORECONF = YES
 SHJPEG_INSTALL_STAGING = YES
 SHJPEG_INSTALL_TARGET = YES
 
-SHJPEG_DEPENDENCIES = host-pkg-config uiomux jpeg
+SHJPEG_DEPENDENCIES = host-pkg-config uiomux shveu jpeg
 
 $(eval $(call AUTOTARGETS,package,shjpeg))
