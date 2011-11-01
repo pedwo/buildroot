@@ -1,0 +1,113 @@
+From 34448e15edefc2b3ec8b1d06822757953a0506e3 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Tue, 1 Nov 2011 09:21:43 +0000
+Subject: [PATCH] sh772x: Update kernel moduel for v3.0
+
+---
+ gfxdrivers/sh772x/kernel-module/sh7722.c        |    9 ++++-----
+ gfxdrivers/sh772x/kernel-module/sh7723.c        |   15 +++++++--------
+ gfxdrivers/sh772x/kernel-module/sh772x_driver.c |    6 +++---
+ 3 files changed, 14 insertions(+), 16 deletions(-)
+
+diff --git a/gfxdrivers/sh772x/kernel-module/sh7722.c b/gfxdrivers/sh772x/kernel-module/sh7722.c
+index d4cdd7e..e3d4859 100644
+--- a/gfxdrivers/sh772x/kernel-module/sh7722.c
++++ b/gfxdrivers/sh772x/kernel-module/sh7722.c
+@@ -880,13 +880,12 @@ sh7722gfx_flush( struct file *filp,
+      return 0;
+ }
+ 
+-static int
+-sh7722gfx_ioctl( struct inode  *inode,
+-                 struct file   *filp,
++static long
++sh7722gfx_ioctl( struct file   *filp,
+                  unsigned int   cmd,
+                  unsigned long  arg )
+ {
+-     int            ret;
++     long           ret;
+      SH772xRegister reg;
+      SH7722JPEG     jpeg;
+ 
+@@ -997,7 +996,7 @@ sh7722gfx_mmap( struct file           *file,
+ 
+ static struct file_operations sh7722gfx_fops = {
+      flush:    sh7722gfx_flush,
+-     ioctl:    sh7722gfx_ioctl,
++     unlocked_ioctl:    sh7722gfx_ioctl,
+      mmap:     sh7722gfx_mmap
+ };
+ 
+diff --git a/gfxdrivers/sh772x/kernel-module/sh7723.c b/gfxdrivers/sh772x/kernel-module/sh7723.c
+index 4bf2fee..d1a7e18 100644
+--- a/gfxdrivers/sh772x/kernel-module/sh7723.c
++++ b/gfxdrivers/sh772x/kernel-module/sh7723.c
+@@ -157,12 +157,12 @@ sh7723_power_display( void )
+      msleep(100);
+ 
+      /* ASD AP-320/325 LCD ON */
+-     ctrl_outw(0x0018, FPGA_LCDREG);
++     __raw_writew(0x0018, FPGA_LCDREG);
+ 
+      /* backlight */
+-     ctrl_outw((ctrl_inw(PORT_PSCR) & ~0x00C0) | 0x40, PORT_PSCR);
+-     ctrl_outb(ctrl_inb(PORT_PSDR) & ~0x08, PORT_PSDR);
+-     ctrl_outw(0x100, FPGA_BKLREG);
++     __raw_writew((__raw_readw(PORT_PSCR) & ~0x00C0) | 0x40, PORT_PSCR);
++     __raw_writeb(__raw_readb(PORT_PSDR) & ~0x08, PORT_PSDR);
++     __raw_writew(0x100, FPGA_BKLREG);
+      
+      return 0;
+ }
+@@ -335,9 +335,8 @@ sh7723_tdg_irq_poller( void *arg )
+ 
+ /**********************************************************************************************************************/
+ 
+-static int
+-sh7723gfx_ioctl( struct inode  *inode,
+-                 struct file   *filp,
++static long
++sh7723gfx_ioctl( struct file   *filp,
+                  unsigned int   cmd,
+                  unsigned long  arg )
+ {
+@@ -428,7 +427,7 @@ sh7723gfx_mmap( struct file           *file,
+ /**********************************************************************************************************************/
+ 
+ static struct file_operations sh7723gfx_fops = {
+-     ioctl:    sh7723gfx_ioctl,
++     unlocked_ioctl:    sh7723gfx_ioctl,
+      mmap:     sh7723gfx_mmap
+ };
+ 
+diff --git a/gfxdrivers/sh772x/kernel-module/sh772x_driver.c b/gfxdrivers/sh772x/kernel-module/sh772x_driver.c
+index 1266f95..b9b34c7 100644
+--- a/gfxdrivers/sh772x/kernel-module/sh772x_driver.c
++++ b/gfxdrivers/sh772x/kernel-module/sh772x_driver.c
+@@ -32,11 +32,11 @@ sh772x_driver_init( void )
+ {
+      int ret = -ENODEV;
+ 
+-     switch(ctrl_inl(CCN_PVR) & 0xffff00) {
++     switch(__raw_readl(CCN_PVR) & 0xffff00) {
+ 
+      /* For SH7722/7723 */
+      case 0x300800:
+-          switch (ctrl_inl(CCN_PRR) & 0xf00) {
++          switch (__raw_readl(CCN_PRR) & 0xf00) {
+                /* SH7722 */
+                case 0xa00:
+                     ret = sh7722_init();
+@@ -58,7 +58,7 @@ sh772x_driver_init( void )
+ 
+      /* For SH7724 */
+      case 0x300b00:
+-          switch (ctrl_inl(CCN_PRR) & 0xff00) {
++          switch (__raw_readl(CCN_PRR) & 0xff00) {
+                /* SH7724 */
+                case 0x2200:
+                     ret = sh7723_init();
+-- 
+1.7.0.4
+
