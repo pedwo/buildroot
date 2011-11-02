@@ -1,0 +1,25 @@
+From 49197cb90ce0ddc7a7b88b0a25625d2245fc7bc9 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Mon, 31 Oct 2011 14:10:06 +0000
+Subject: [PATCH 2/9] sh: Don't overwrite the command line in ecovec defconfig
+
+---
+ arch/sh/configs/ecovec24_defconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/arch/sh/configs/ecovec24_defconfig b/arch/sh/configs/ecovec24_defconfig
+index 911e30c..79efd71 100644
+--- a/arch/sh/configs/ecovec24_defconfig
++++ b/arch/sh/configs/ecovec24_defconfig
+@@ -17,7 +17,7 @@ CONFIG_SH_ECOVEC=y
+ CONFIG_HEARTBEAT=y
+ CONFIG_SECCOMP=y
+ CONFIG_PREEMPT=y
+-CONFIG_CMDLINE_OVERWRITE=y
++# CONFIG_CMDLINE_OVERWRITE is not set
+ CONFIG_CMDLINE="console=tty0, console=ttySC0,115200 root=/dev/nfs ip=dhcp mem=248M memchunk.vpu=8m memchunk.veu0=4m"
+ CONFIG_NET=y
+ CONFIG_PACKET=y
+-- 
+1.7.0.4
+

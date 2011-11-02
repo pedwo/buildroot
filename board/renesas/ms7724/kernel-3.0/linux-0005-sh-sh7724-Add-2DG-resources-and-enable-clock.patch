@@ -1,0 +1,70 @@
+From c67bbdc62fc7d7596f4ffe647b5a024049383501 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Mon, 31 Oct 2011 15:14:11 +0000
+Subject: [PATCH 5/9] sh: sh7724: Add 2DG resources and enable clock
+
+---
+ arch/sh/boards/mach-ecovec24/setup.c   |    7 +++++++
+ arch/sh/kernel/cpu/sh4a/setup-sh7724.c |   21 +++++++++++++++++++++
+ 2 files changed, 28 insertions(+), 0 deletions(-)
+
+diff --git a/arch/sh/boards/mach-ecovec24/setup.c b/arch/sh/boards/mach-ecovec24/setup.c
+index e01f400..07e1474 100644
+--- a/arch/sh/boards/mach-ecovec24/setup.c
++++ b/arch/sh/boards/mach-ecovec24/setup.c
+@@ -1336,6 +1336,13 @@ static int __init arch_setup(void)
+ 		clk_put(clk);
+ 	}
+ 
++	/* enable 2dg */
++	clk = clk_get(NULL, "2dg0");
++	if (!IS_ERR(clk)) {
++		clk_enable(clk);
++		clk_put(clk);
++	}
++
+ 	/* enable IrDA */
+ 	gpio_request(GPIO_FN_IRDA_OUT, NULL);
+ 	gpio_request(GPIO_FN_IRDA_IN,  NULL);
+diff --git a/arch/sh/kernel/cpu/sh4a/setup-sh7724.c b/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
+index f555dd0..b4e5c96 100644
+--- a/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
++++ b/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
+@@ -951,6 +951,26 @@ static struct platform_device spu1_device = {
+ 	},
+ };
+ 
++/* 2DG */
++static struct resource twodg_resources[] = {
++	[0] = {
++		.name   = "2DG",
++		.start  = 0xa4680000,
++		.end    = 0xa46800ff,
++		.flags  = IORESOURCE_MEM,
++	},
++	[1] = {
++		.start  = 44,
++		.flags  = IORESOURCE_IRQ,
++	},
++};
++
++static struct platform_device twodg_device = {
++	.name           = "2dg",
++	.num_resources  = ARRAY_SIZE(twodg_resources),
++	.resource       = twodg_resources,
++};
++
+ static struct platform_device *sh7724_devices[] __initdata = {
+ 	&scif0_device,
+ 	&scif1_device,
+@@ -978,6 +998,7 @@ static struct platform_device *sh7724_devices[] __initdata = {
+ 	&jpu_device,
+ 	&spu0_device,
+ 	&spu1_device,
++	&twodg_device,
+ };
+ 
+ static int __init sh7724_devices_setup(void)
+-- 
+1.7.0.4
+

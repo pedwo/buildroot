@@ -1,0 +1,60 @@
+From 6f5c186b32ed371bd804e1b95038c0753eb09659 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Mon, 31 Oct 2011 15:26:18 +0000
+Subject: [PATCH 6/9] mt9t112: Initialize sensor everytime it's opened
+
+---
+ drivers/media/video/mt9t112.c |   20 +++++++-------------
+ 1 files changed, 7 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/media/video/mt9t112.c b/drivers/media/video/mt9t112.c
+index bffa9ee..d9cc488 100644
+--- a/drivers/media/video/mt9t112.c
++++ b/drivers/media/video/mt9t112.c
+@@ -106,9 +106,6 @@ struct mt9t112_priv {
+ 	struct mt9t112_frame_size	 frame;
+ 	const struct mt9t112_format	*format;
+ 	int				 model;
+-	u32				 flags;
+-/* for flags */
+-#define INIT_DONE  (1<<0)
+ };
+ 
+ /************************************************************************
+@@ -861,6 +858,7 @@ static int mt9t112_s_stream(struct v4l2_subdev *sd, int enable)
+ 	struct i2c_client *client = v4l2_get_subdevdata(sd);
+ 	struct mt9t112_priv *priv = to_mt9t112(client);
+ 	int ret = 0;
++	u16 param;
+ 
+ 	if (!enable) {
+ 		/* FIXME
+@@ -876,19 +874,15 @@ static int mt9t112_s_stream(struct v4l2_subdev *sd, int enable)
+ 		return ret;
+ 	}
+ 
+-	if (!(priv->flags & INIT_DONE)) {
+-		u16 param = (MT9T112_FLAG_PCLK_RISING_EDGE &
+-			     priv->info->flags) ? 0x0001 : 0x0000;
++	param = (MT9T112_FLAG_PCLK_RISING_EDGE &
++		     priv->info->flags) ? 0x0001 : 0x0000;
+ 
+-		ECHECKER(ret, mt9t112_init_camera(client));
++	ECHECKER(ret, mt9t112_init_camera(client));
+ 
+-		/* Invert PCLK (Data sampled on falling edge of pixclk) */
+-		mt9t112_reg_write(ret, client, 0x3C20, param);
++	/* Invert PCLK (Data sampled on falling edge of pixclk) */
++	mt9t112_reg_write(ret, client, 0x3C20, param);
+ 
+-		mdelay(5);
+-
+-		priv->flags |= INIT_DONE;
+-	}
++	mdelay(5);
+ 
+ 	mt9t112_mcu_write(ret, client, VAR(26, 7), priv->format->fmt);
+ 	mt9t112_mcu_write(ret, client, VAR(26, 9), priv->format->order);
+-- 
+1.7.0.4
+

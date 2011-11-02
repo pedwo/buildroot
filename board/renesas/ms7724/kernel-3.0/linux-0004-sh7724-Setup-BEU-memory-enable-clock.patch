@@ -1,0 +1,44 @@
+From 63d55e52e5d45b87b72daf645cbda9ff42ea2252 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Wed, 29 Sep 2010 11:16:39 +0100
+Subject: [PATCH 4/9] sh7724: Setup BEU memory & enable clock
+
+---
+ arch/sh/boards/mach-ecovec24/setup.c   |    7 +++++++
+ arch/sh/kernel/cpu/sh4a/setup-sh7724.c |    2 ++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/arch/sh/boards/mach-ecovec24/setup.c b/arch/sh/boards/mach-ecovec24/setup.c
+index 513cb1a..e01f400 100644
+--- a/arch/sh/boards/mach-ecovec24/setup.c
++++ b/arch/sh/boards/mach-ecovec24/setup.c
+@@ -1329,6 +1329,13 @@ static int __init arch_setup(void)
+ 		clk_put(clk);
+ 	}
+ 
++	/* enable beu */
++	clk = clk_get(NULL, "beu0");
++	if (!IS_ERR(clk)) {
++		clk_enable(clk);
++		clk_put(clk);
++	}
++
+ 	/* enable IrDA */
+ 	gpio_request(GPIO_FN_IRDA_OUT, NULL);
+ 	gpio_request(GPIO_FN_IRDA_IN,  NULL);
+diff --git a/arch/sh/kernel/cpu/sh4a/setup-sh7724.c b/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
+index 134a397..f555dd0 100644
+--- a/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
++++ b/arch/sh/kernel/cpu/sh4a/setup-sh7724.c
+@@ -985,6 +985,8 @@ static int __init sh7724_devices_setup(void)
+ 	platform_resource_setup_memory(&vpu_device, "vpu", 2 << 20);
+ 	platform_resource_setup_memory(&veu0_device, "veu0", 2 << 20);
+ 	platform_resource_setup_memory(&veu1_device, "veu1", 2 << 20);
++	platform_resource_setup_memory(&beu0_device, "beu0", 0 << 20);
++	platform_resource_setup_memory(&beu1_device, "beu1", 0 << 20);
+ 	platform_resource_setup_memory(&jpu_device,  "jpu",  2 << 20);
+ 	platform_resource_setup_memory(&spu0_device, "spu0", 2 << 20);
+ 	platform_resource_setup_memory(&spu1_device, "spu1", 2 << 20);
+-- 
+1.7.0.4
+

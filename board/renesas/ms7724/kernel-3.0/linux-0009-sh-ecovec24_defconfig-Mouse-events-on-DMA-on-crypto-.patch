@@ -1,0 +1,48 @@
+From 4a20a4001643e9aa00e086464369496efe4c8485 Mon Sep 17 00:00:00 2001
+From: Phil Edworthy <phil.edworthy@renesas.com>
+Date: Mon, 31 Oct 2011 15:00:21 +0000
+Subject: [PATCH 9/9] sh: ecovec24_defconfig: Mouse events on, DMA on, crypto off
+
+---
+ arch/sh/configs/ecovec24_defconfig |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/arch/sh/configs/ecovec24_defconfig b/arch/sh/configs/ecovec24_defconfig
+index 79efd71..66380a3 100644
+--- a/arch/sh/configs/ecovec24_defconfig
++++ b/arch/sh/configs/ecovec24_defconfig
+@@ -14,6 +14,9 @@ CONFIG_MEMORY_SIZE=0x10000000
+ CONFIG_FLATMEM_MANUAL=y
+ CONFIG_SH_ECOVEC=y
+ # CONFIG_SH_TIMER_CMT is not set
++CONFIG_SH_DMA=y
++CONFIG_SH_DMA_API=y
++CONFIG_NR_ONCHIP_DMA_CHANNELS=12
+ CONFIG_HEARTBEAT=y
+ CONFIG_SECCOMP=y
+ CONFIG_PREEMPT=y
+@@ -55,7 +58,11 @@ CONFIG_NET_ETHERNET=y
+ CONFIG_SH_ETH=y
+ # CONFIG_NETDEV_1000 is not set
+ # CONFIG_NETDEV_10000 is not set
+-# CONFIG_INPUT_MOUSEDEV is not set
++CONFIG_INPUT_MOUSEDEV=y
++CONFIG_INPUT_MOUSEDEV_PSAUX=y
++CONFIG_INPUT_MOUSEDEV_SCREEN_X=800
++CONFIG_INPUT_MOUSEDEV_SCREEN_Y=480
++# CONFIG_INPUT_JOYDEV is not set
+ CONFIG_INPUT_EVDEV=y
+ # CONFIG_KEYBOARD_ATKBD is not set
+ CONFIG_KEYBOARD_SH_KEYSC=y
+@@ -143,7 +150,4 @@ CONFIG_NLS_ISO8859_1=y
+ CONFIG_DEBUG_FS=y
+ # CONFIG_RCU_CPU_STALL_DETECTOR is not set
+ CONFIG_SYSCTL_SYSCALL_CHECK=y
+-CONFIG_CRYPTO=y
+-CONFIG_CRYPTO_CBC=y
+-# CONFIG_CRYPTO_ANSI_CPRNG is not set
+-CONFIG_CRC_T10DIF=y
++# CONFIG_CRYPTO is not set
+-- 
+1.7.0.4
+
