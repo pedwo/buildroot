@@ -3,7 +3,7 @@
 # gst-sh-mobile
 #
 #############################################################
-GST_SH_MOBILE_VERSION = 0.10.3
+GST_SH_MOBILE_VERSION = 0.10.4
 GST_SH_MOBILE_SOURCE = gst-sh-mobile-$(GST_SH_MOBILE_VERSION).tar.gz
 GST_SH_MOBILE_SITE = https://github.com/downloads/pedwo/gst-sh-mobile
 
