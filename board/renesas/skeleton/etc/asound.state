@@ -1,0 +1,14 @@
+state.FSIDA7210 {
+        control.1 {
+                comment.access 'read write'
+                comment.type INTEGER
+                comment.count 2
+                comment.range '0 - 63'
+                comment.dbmin -7950
+                comment.dbmax 1500
+                iface MIXER
+                name 'HeadPhone Playback Volume'
+                value.0 60
+                value.1 60
+        }
+}
